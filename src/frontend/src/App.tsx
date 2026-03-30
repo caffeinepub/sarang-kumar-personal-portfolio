@@ -2,20 +2,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Download,
+  Gamepad2,
   Github,
+  Globe,
+  Heart,
   Linkedin,
   Mail,
   MapPin,
   Menu,
+  MessageCircle,
   Phone,
+  Star,
   Trash2,
   Twitter,
   Upload,
   X,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -36,31 +43,37 @@ const EXPERIENCE = [
     company: "Cris Financial Ltd",
     period: "Jul 2023 – Present",
     bullets: [
-      "LAP loan PD Underwriting and recommendations process.",
-      "End-to-end evaluation of Loan Against Property (LAP) cases.",
-    ],
-  },
-  {
-    title: "Senior Associate",
-    company:
-      "Cris Financial Ltd (HO) — Subsidiary of Spandana Sphoorthy Financial Ltd",
-    period: "~2022 – Jul 2023",
-    bullets: [
-      "CPA – CERSAI – Login fee reconciliation – physical file checking – all MIS.",
-      "LAP & NANO product cases login and circulating daily Credit MIS reports at pan India level.",
+      "Underwriting LAP & NANO loans ensuring compliance with credit policies.",
+      "Prepared MIS reports including login fee reconciliation, sanctioned analysis, and reject analysis.",
+      "PD's / recommendations & Sanctions.",
+      "Income analysis & Bureau analysis.",
+      "Vendor Management.",
+      "Technical and RCU invoice checking and payments.",
+      "Coordination with CPA team operations.",
+      "Improved loan approval turnaround by 20% through optimized underwriting processes.",
+      "Reduced data errors by 15% via enhanced MIS reporting and reconciliation.",
+      "Operations: CERSAI, Physical files checking.",
     ],
   },
   {
     title: "Process Associate",
     company: "Spandana Sphoorthy Financial Ltd",
     period: "Jan 2023 – Jul 2023",
-    bullets: ["Backend Operations: data entry and KYC verification."],
+    bullets: [
+      "Performed backend operations including data entry and KYC verification.",
+      "Ensured accuracy and compliance in daily processing tasks.",
+      "Streamlined KYC verification process reducing turnaround time by 10%.",
+    ],
   },
   {
-    title: "Operation Executive",
+    title: "Operations Executive",
     company: "Tata AIG General Insurance",
     period: "Jan 2022 – Jan 2023",
-    bullets: ["General Insurance Policy Booking and Data Entry."],
+    bullets: [
+      "Booked and processed general insurance policies accurately.",
+      "Executed data entry tasks to maintain seamless policy administration.",
+      "Enhanced policy booking accuracy by implementing quality checks, reducing errors by 12%.",
+    ],
   },
 ];
 
@@ -110,14 +123,22 @@ const PROJECT_BULLETS = [
 ];
 
 const PERSONAL = [
-  { label: "Date of Birth", value: "23rd October 1999" },
-  { label: "Marital Status", value: "Single" },
-  { label: "Religion", value: "Hindu" },
-  { label: "Nationality", value: "Indian" },
-  { label: "Languages", value: "Hindi, English, Telugu, Marathi" },
-  { label: "Location", value: "Hyderabad, Telangana (18 years)" },
-  { label: "Hobbies", value: "Playing Cricket, Learning New Things" },
-  { label: "Strengths", value: "Quick Learner, Positive Mindset" },
+  { label: "Date of Birth", value: "23rd October 1999", icon: Calendar },
+  { label: "Marital Status", value: "Single", icon: Heart },
+  { label: "Religion", value: "Hindu", icon: Star },
+  { label: "Nationality", value: "Indian", icon: Globe },
+  {
+    label: "Languages",
+    value: "Hindi, English, Telugu, Marathi",
+    icon: MessageCircle,
+  },
+  { label: "Location", value: "Hyderabad, Telangana (18 years)", icon: MapPin },
+  {
+    label: "Hobbies",
+    value: "Playing Cricket, Learning New Things",
+    icon: Gamepad2,
+  },
+  { label: "Strengths", value: "Quick Learner, Positive Mindset", icon: Zap },
 ];
 
 const KNOWLEDGE_CARDS = [
@@ -158,6 +179,10 @@ const KNOWLEDGE_CARDS = [
 // ─────────────────────────── HELPERS ─────────────────────────────
 function scrollTo(href: string) {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+}
+
+function isAchievementBullet(bullet: string) {
+  return bullet.includes("%");
 }
 
 // ─────────────────────────── COMPONENTS ──────────────────────────
@@ -229,7 +254,17 @@ function Header() {
           </nav>
 
           {/* CTA */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://www.linkedin.com/in/sarang-kumar-854214257/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-[#0A66C2] flex items-center justify-center text-white hover:bg-[#004182] transition-colors shadow-md"
+              title="LinkedIn Profile"
+              data-ocid="header.linkedin.link"
+            >
+              <Linkedin className="w-6 h-6" />
+            </a>
             <Button
               className="bg-gold hover:bg-gold-hover text-white font-semibold text-sm px-5"
               data-ocid="header.download.button"
@@ -281,6 +316,16 @@ function Header() {
                   {link.label}
                 </button>
               ))}
+              <a
+                href="https://www.linkedin.com/in/sarang-kumar-854214257/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-[#0A66C2] text-white rounded-lg px-4 py-2 mt-2 font-semibold"
+                data-ocid="mobile.linkedin.link"
+              >
+                <Linkedin className="w-5 h-5" />
+                View LinkedIn Profile
+              </a>
               <Button
                 className="bg-gold hover:bg-gold-hover text-white mt-2"
                 data-ocid="mobile.download.button"
@@ -343,9 +388,10 @@ function HeroSection() {
             Sarang Kumar
           </h1>
           <p className="text-white/75 text-lg leading-relaxed mb-8 max-w-lg">
-            Credit Manager with expertise in LAP Underwriting, Credit MIS, and
-            financial operations. Driven by a passion for continuous learning
-            and delivering tangible results.
+            Credit Manager with expertise in LAP & NANO loan underwriting,
+            credit MIS reporting, income & bureau analysis, and financial
+            operations. Passionate about continuous learning and delivering
+            measurable results.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
             <Button
@@ -443,16 +489,30 @@ function ExperienceSection() {
                       {job.period}
                     </span>
                   </div>
-                  <ul className="space-y-1.5 mt-3">
-                    {job.bullets.map((b) => (
-                      <li
-                        key={b}
-                        className="flex gap-2 text-sm text-muted-foreground"
-                      >
-                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                        {b}
-                      </li>
-                    ))}
+                  <ul className="space-y-2 mt-3">
+                    {job.bullets.map((b) =>
+                      isAchievementBullet(b) ? (
+                        <li
+                          key={b}
+                          className="flex gap-2 text-sm font-semibold text-navy items-start"
+                        >
+                          <span className="mt-1 text-gold text-xs flex-shrink-0">
+                            ★
+                          </span>
+                          <span className="bg-gold/10 border border-gold/30 text-navy rounded px-2 py-0.5 leading-snug">
+                            {b}
+                          </span>
+                        </li>
+                      ) : (
+                        <li
+                          key={b}
+                          className="flex gap-2 text-sm text-muted-foreground items-start"
+                        >
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
+                          {b}
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </div>
               </motion.div>
@@ -598,29 +658,44 @@ function PersonalSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-white rounded-lg border border-border shadow-sm overflow-hidden"
+          className="rounded-xl border border-border shadow-md overflow-hidden"
         >
-          <div className="grid sm:grid-cols-2">
-            {PERSONAL.map((item, i) => (
-              <div
-                key={item.label}
-                className={`flex gap-4 p-5 ${
-                  i !== PERSONAL.length - 1 ? "border-b border-border" : ""
-                } ${
-                  i % 2 === 0 && i < PERSONAL.length - 1 ? "sm:border-r" : ""
-                }`}
-              >
-                <div className="w-2 h-2 rounded-full bg-gold flex-shrink-0 mt-2" />
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                    {item.label}
-                  </p>
-                  <p className="text-foreground font-medium mt-0.5">
-                    {item.value}
-                  </p>
+          {/* Card header bar */}
+          <div className="bg-navy px-6 py-4 flex items-center gap-3">
+            <div className="w-1 h-8 bg-gold rounded-full" />
+            <h3 className="font-serif text-white text-xl font-bold tracking-wide">
+              Personal Profile
+            </h3>
+          </div>
+
+          {/* Rows */}
+          <div className="divide-y divide-border">
+            {PERSONAL.map((item, i) => {
+              const Icon = item.icon;
+              const isAlt = i % 2 !== 0;
+              return (
+                <div
+                  key={item.label}
+                  className={`flex items-center gap-5 px-6 py-4 ${
+                    isAlt ? "bg-gray-50" : "bg-white"
+                  }`}
+                >
+                  {/* Icon */}
+                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-navy" />
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-0.5">
+                      {item.label}
+                    </p>
+                    <p className="text-foreground font-semibold text-sm">
+                      {item.value}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
       </div>
@@ -939,7 +1014,7 @@ function Footer() {
                 <Github className="w-4 h-4" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/sarang-kumar-854214257/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
