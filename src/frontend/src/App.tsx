@@ -1,0 +1,784 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChevronDown,
+  Download,
+  Github,
+  Linkedin,
+  Mail,
+  MapPin,
+  Menu,
+  Phone,
+  Twitter,
+  X,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+
+// ───────────────────────────── DATA ──────────────────────────────
+const NAV_LINKS = [
+  { label: "Home", href: "#home" },
+  { label: "Experience", href: "#experience" },
+  { label: "Education", href: "#education" },
+  { label: "Skills", href: "#skills" },
+  { label: "Contact", href: "#contact" },
+];
+
+const EXPERIENCE = [
+  {
+    title: "Credit Manager",
+    company: "Cris Financial Ltd",
+    period: "Jul 2023 – Present",
+    bullets: [
+      "LAP loan PD Underwriting and recommendations process.",
+      "End-to-end evaluation of Loan Against Property (LAP) cases.",
+    ],
+  },
+  {
+    title: "Senior Associate",
+    company:
+      "Cris Financial Ltd (HO) — Subsidiary of Spandana Sphoorthy Financial Ltd",
+    period: "~2022 – Jul 2023",
+    bullets: [
+      "CPA – CERSAI – Login fee reconciliation – physical file checking – all MIS.",
+      "LAP & NANO product cases login and circulating daily Credit MIS reports at pan India level.",
+    ],
+  },
+  {
+    title: "Process Associate",
+    company: "Spandana Sphoorthy Financial Ltd",
+    period: "Jan 2023 – Jul 2023",
+    bullets: ["Backend Operations: data entry and KYC verification."],
+  },
+  {
+    title: "Operation Executive",
+    company: "Tata AIG General Insurance",
+    period: "Jan 2022 – Jan 2023",
+    bullets: ["General Insurance Policy Booking and Data Entry."],
+  },
+];
+
+const EDUCATION = [
+  {
+    degree: "S.S.C",
+    institution: "MHV High School",
+    year: "July 2016",
+  },
+  {
+    degree: "Intermediate",
+    institution: "HMV Junior College",
+    year: "April 2018",
+  },
+  {
+    degree: "B.Com (Computers)",
+    institution: "HMV Degree College, Osmania University",
+    year: "Oct 2021",
+  },
+];
+
+const SKILLS = [
+  "Software Testing (Manual)",
+  "MS Excel",
+  "MS Office",
+  "MS Word",
+  "MS PowerPoint",
+  "Project Presentations",
+  "LAP Underwriting",
+  "Credit MIS Reporting",
+  "KYC Verification",
+  "Data Entry",
+  "CERSAI",
+  "CPA Processing",
+];
+
+const LANGUAGES = ["Hindi", "English", "Telugu", "Marathi"];
+
+const PROJECT_BULLETS = [
+  "Conducted manual testing of software applications, identifying defects and ensuring alignment with functional specifications.",
+  "Developed and executed detailed test cases and test scripts based on project requirements.",
+  "Collaborated with developers and product managers to reproduce and troubleshoot reported issues.",
+  "Reported and documented bugs and defects in the issue tracking system.",
+  "Participated in test case reviews and defect prioritization sessions.",
+  "Verified and validated software functionality, usability, and performance across environments.",
+  "Ensured adherence to testing best practices and company standards.",
+];
+
+const PERSONAL = [
+  { label: "Date of Birth", value: "23rd October 1999" },
+  { label: "Marital Status", value: "Single" },
+  { label: "Religion", value: "Hindu" },
+  { label: "Nationality", value: "Indian" },
+  { label: "Languages", value: "Hindi, English, Telugu, Marathi" },
+  { label: "Location", value: "Hyderabad, Telangana (18 years)" },
+  { label: "Hobbies", value: "Playing Cricket, Learning New Things" },
+  { label: "Strengths", value: "Quick Learner, Positive Mindset" },
+];
+
+// ─────────────────────────── HELPERS ─────────────────────────────
+function scrollTo(href: string) {
+  document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+}
+
+// ─────────────────────────── COMPONENTS ──────────────────────────
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-center mb-12">
+      <h2 className="font-serif text-3xl md:text-4xl font-bold text-navy uppercase tracking-widest">
+        {children}
+      </h2>
+      <div className="mt-3 mx-auto w-16 h-1 bg-gold rounded-full" />
+    </div>
+  );
+}
+
+function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  const handleNavClick = (href: string) => {
+    setMenuOpen(false);
+    scrollTo(href);
+  };
+
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? "bg-white shadow-md" : "bg-white"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center text-white font-serif font-bold text-sm">
+              SK
+            </div>
+            <div className="leading-tight">
+              <p className="font-serif font-bold text-navy text-sm tracking-wide">
+                SARANG KUMAR
+              </p>
+              <p className="text-xs text-muted-foreground tracking-widest uppercase">
+                Finance Professional
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop Nav */}
+          <nav
+            className="hidden md:flex items-center gap-6"
+            data-ocid="header.section"
+          >
+            {NAV_LINKS.map((link) => (
+              <button
+                type="button"
+                key={link.href}
+                onClick={() => handleNavClick(link.href)}
+                className="text-sm font-medium text-foreground hover:text-gold transition-colors"
+                data-ocid={`nav.${link.label.toLowerCase()}.link`}
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* CTA */}
+          <div className="hidden md:flex">
+            <Button
+              className="bg-gold hover:bg-gold-hover text-white font-semibold text-sm px-5"
+              data-ocid="header.download.button"
+              asChild
+            >
+              <a
+                href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
+                download="Sarang_Kumar_Resume.pdf"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Resume
+              </a>
+            </Button>
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            className="md:hidden p-2 text-navy"
+            onClick={() => setMenuOpen((v) => !v)}
+            data-ocid="header.menu.toggle"
+          >
+            {menuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-t border-border overflow-hidden"
+          >
+            <div className="px-4 py-4 flex flex-col gap-3">
+              {NAV_LINKS.map((link) => (
+                <button
+                  type="button"
+                  key={link.href}
+                  onClick={() => handleNavClick(link.href)}
+                  className="text-left text-sm font-medium text-foreground hover:text-gold py-1"
+                >
+                  {link.label}
+                </button>
+              ))}
+              <Button
+                className="bg-gold hover:bg-gold-hover text-white mt-2"
+                data-ocid="mobile.download.button"
+                asChild
+              >
+                <a
+                  href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
+                  download="Sarang_Kumar_Resume.pdf"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Resume
+                </a>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+function HeroSection() {
+  return (
+    <section
+      id="home"
+      className="relative bg-navy min-h-screen flex items-center pt-16"
+      data-ocid="hero.section"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-2 gap-12 items-center">
+        {/* Portrait placeholder */}
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7 }}
+          className="flex justify-center md:justify-start"
+        >
+          <div className="relative">
+            <div className="w-56 h-56 md:w-72 md:h-72 rounded-full bg-white/10 border-4 border-gold flex items-center justify-center">
+              <span className="font-serif text-white text-7xl md:text-8xl font-bold select-none">
+                SK
+              </span>
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 rounded-full bg-gold opacity-20" />
+          </div>
+        </motion.div>
+
+        {/* Text block */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          className="text-white text-center md:text-left"
+        >
+          <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-3">
+            Finance Professional
+          </p>
+          <h1 className="font-serif text-4xl md:text-6xl font-bold leading-tight mb-6">
+            Sarang Kumar
+          </h1>
+          <p className="text-white/75 text-lg leading-relaxed mb-8 max-w-lg">
+            Credit Manager with expertise in LAP Underwriting, Credit MIS, and
+            financial operations. Driven by a passion for continuous learning
+            and delivering tangible results.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+            <Button
+              onClick={() => scrollTo("#experience")}
+              className="bg-gold hover:bg-gold-hover text-white px-8 py-3 text-base font-semibold"
+              data-ocid="hero.learn_more.button"
+            >
+              Learn More
+            </Button>
+            <Button
+              variant="outline"
+              className="border-white/40 text-white bg-transparent hover:bg-white/10 px-8 py-3 text-base"
+              data-ocid="hero.contact.button"
+              onClick={() => scrollTo("#contact")}
+            >
+              Get In Touch
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Scroll cue */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50"
+        animate={{ y: [0, 8, 0] }}
+        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.6 }}
+      >
+        <ChevronDown className="w-6 h-6" />
+      </motion.div>
+    </section>
+  );
+}
+
+function ObjectiveSection() {
+  return (
+    <section id="objective" className="bg-white py-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>My Objective</SectionHeading>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center text-lg text-muted-foreground leading-relaxed"
+        >
+          Looking for an exciting and dynamic role where I can utilize my skills
+          and experience to drive tangible results. Passionate about joining an
+          organization that fosters a culture of innovation, continuous
+          learning, and personal growth.
+        </motion.p>
+      </div>
+    </section>
+  );
+}
+
+function ExperienceSection() {
+  return (
+    <section
+      id="experience"
+      className="bg-light-gray py-20"
+      data-ocid="experience.section"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Work Experience</SectionHeading>
+
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-navy/20" />
+
+          <div className="space-y-10">
+            {EXPERIENCE.map((job, i) => (
+              <motion.div
+                key={job.title}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="relative pl-16"
+                data-ocid={`experience.item.${i + 1}`}
+              >
+                {/* Circle marker */}
+                <div className="absolute left-3 top-1.5 w-5 h-5 rounded-full bg-navy border-4 border-white shadow" />
+
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-border">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 mb-3">
+                    <div>
+                      <h3 className="font-serif font-bold text-navy text-xl">
+                        {job.title}
+                      </h3>
+                      <p className="text-gold text-sm font-semibold mt-0.5">
+                        {job.company}
+                      </p>
+                    </div>
+                    <span className="text-xs bg-navy/10 text-navy font-medium px-3 py-1 rounded-full whitespace-nowrap">
+                      {job.period}
+                    </span>
+                  </div>
+                  <ul className="space-y-1.5 mt-3">
+                    {job.bullets.map((b) => (
+                      <li
+                        key={b}
+                        className="flex gap-2 text-sm text-muted-foreground"
+                      >
+                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProjectSection() {
+  return (
+    <section
+      id="project"
+      className="bg-white py-20"
+      data-ocid="project.section"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Project</SectionHeading>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-light-gray rounded-lg p-8 border border-border"
+        >
+          <div className="flex items-start justify-between flex-wrap gap-2 mb-4">
+            <div>
+              <h3 className="font-serif font-bold text-navy text-2xl">
+                Software Tester (Manual)
+              </h3>
+              <p className="text-gold font-semibold mt-1">Synoriq</p>
+            </div>
+            <Badge className="bg-navy text-white text-xs">Testing</Badge>
+          </div>
+          <ul className="space-y-2 mt-4">
+            {PROJECT_BULLETS.map((b) => (
+              <li key={b} className="flex gap-3 text-sm text-muted-foreground">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function EducationSection() {
+  return (
+    <section
+      id="education"
+      className="bg-light-gray py-20"
+      data-ocid="education.section"
+    >
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Education</SectionHeading>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {EDUCATION.map((edu, i) => (
+            <motion.div
+              key={edu.degree}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              data-ocid={`education.item.${i + 1}`}
+            >
+              <Card className="overflow-hidden border-0 shadow-md">
+                <CardHeader className="bg-navy py-4 px-5">
+                  <CardTitle className="text-white font-serif text-lg">
+                    {edu.degree}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="py-5 px-5">
+                  <p className="font-semibold text-foreground text-sm">
+                    {edu.institution}
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    {edu.year}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SkillsSection() {
+  return (
+    <section id="skills" className="bg-white py-20" data-ocid="skills.section">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Skills</SectionHeading>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="flex flex-wrap gap-3 justify-center"
+        >
+          {SKILLS.map((skill) => (
+            <Badge
+              key={skill}
+              className="bg-navy/5 text-navy border border-navy/20 hover:bg-navy hover:text-white transition-colors text-sm px-4 py-2 rounded-full cursor-default"
+            >
+              {skill}
+            </Badge>
+          ))}
+        </motion.div>
+
+        <div className="mt-10">
+          <h3 className="text-center font-serif font-bold text-navy text-xl mb-4">
+            Languages
+          </h3>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {LANGUAGES.map((lang) => (
+              <Badge
+                key={lang}
+                className="bg-gold text-white border-0 text-sm px-4 py-2 rounded-full"
+              >
+                {lang}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PersonalSection() {
+  return (
+    <section
+      id="personal"
+      className="bg-light-gray py-20"
+      data-ocid="personal.section"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Personal Profile</SectionHeading>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-white rounded-lg border border-border shadow-sm overflow-hidden"
+        >
+          <div className="grid sm:grid-cols-2">
+            {PERSONAL.map((item, i) => (
+              <div
+                key={item.label}
+                className={`flex gap-4 p-5 ${
+                  i !== PERSONAL.length - 1 ? "border-b border-border" : ""
+                } ${
+                  i % 2 === 0 && i < PERSONAL.length - 1 ? "sm:border-r" : ""
+                }`}
+              >
+                <div className="w-2 h-2 rounded-full bg-gold flex-shrink-0 mt-2" />
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                    {item.label}
+                  </p>
+                  <p className="text-foreground font-medium mt-0.5">
+                    {item.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function ContactSection() {
+  return (
+    <section
+      id="contact"
+      className="bg-white py-20"
+      data-ocid="contact.section"
+    >
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Contact Me</SectionHeading>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid sm:grid-cols-3 gap-6"
+        >
+          <a
+            href="mailto:Sarangkumar408@gmail.com"
+            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border hover:border-gold hover:shadow-md transition-all group"
+            data-ocid="contact.email.link"
+          >
+            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center group-hover:bg-navy transition-colors">
+              <Mail className="w-5 h-5 text-navy group-hover:text-white transition-colors" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                Email
+              </p>
+              <p className="text-sm text-foreground font-medium mt-0.5 break-all">
+                Sarangkumar408@gmail.com
+              </p>
+            </div>
+          </a>
+
+          <a
+            href="tel:+917095244790"
+            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border hover:border-gold hover:shadow-md transition-all group"
+            data-ocid="contact.phone.link"
+          >
+            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center group-hover:bg-navy transition-colors">
+              <Phone className="w-5 h-5 text-navy group-hover:text-white transition-colors" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                Phone
+              </p>
+              <p className="text-sm text-foreground font-medium mt-0.5">
+                +91 7095244790
+              </p>
+            </div>
+          </a>
+
+          <div
+            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border"
+            data-ocid="contact.address.card"
+          >
+            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-navy" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                Location
+              </p>
+              <p className="text-sm text-foreground font-medium mt-0.5">
+                Hanuman Nagar, Shankarpally, Hyderabad – 501203
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="bg-navy text-white py-14" data-ocid="footer.section">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-3 gap-10 mb-10">
+          {/* Social */}
+          <div>
+            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
+              Connect
+            </h4>
+            <div className="flex gap-4">
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+                data-ocid="footer.github.link"
+              >
+                <Github className="w-4 h-4" />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+                data-ocid="footer.linkedin.link"
+              >
+                <Linkedin className="w-4 h-4" />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
+                data-ocid="footer.twitter.link"
+              >
+                <Twitter className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
+              Contact
+            </h4>
+            <div className="space-y-2 text-sm text-white/70">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-gold" />
+                <span>Sarangkumar408@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-gold" />
+                <span>+91 7095244790</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-gold" />
+                <span>Hyderabad, Telangana</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Site Map */}
+          <div>
+            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
+              Site Map
+            </h4>
+            <ul className="space-y-2 text-sm text-white/70">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <button
+                    type="button"
+                    onClick={() => scrollTo(link.href)}
+                    className="hover:text-gold transition-colors"
+                    data-ocid={`footer.${link.label.toLowerCase()}.link`}
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-white/40">
+          <p>© {year} Sarang Kumar. All rights reserved.</p>
+          <p>
+            Built with love using{" "}
+            <a
+              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:text-gold/80 transition-colors"
+            >
+              caffeine.ai
+            </a>
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─────────────────────────────── APP ─────────────────────────────
+export default function App() {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        <HeroSection />
+        <ObjectiveSection />
+        <ExperienceSection />
+        <ProjectSection />
+        <EducationSection />
+        <SkillsSection />
+        <PersonalSection />
+        <ContactSection />
+      </main>
+      <Footer />
+    </div>
+  );
+}
