@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Github,
   Linkedin,
@@ -10,11 +12,13 @@ import {
   MapPin,
   Menu,
   Phone,
+  Trash2,
   Twitter,
+  Upload,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ───────────────────────────── DATA ──────────────────────────────
 const NAV_LINKS = [
@@ -22,6 +26,7 @@ const NAV_LINKS = [
   { label: "Experience", href: "#experience" },
   { label: "Education", href: "#education" },
   { label: "Skills", href: "#skills" },
+  { label: "Knowledge Cards", href: "#knowledge-cards" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -115,6 +120,41 @@ const PERSONAL = [
   { label: "Strengths", value: "Quick Learner, Positive Mindset" },
 ];
 
+const KNOWLEDGE_CARDS = [
+  {
+    src: "/assets/img-20260121-wa0213-019d3e56-8e5a-7430-9ba2-71b049351a93.jpg",
+    caption: "BIG TV - Press ID Card",
+  },
+  {
+    src: "/assets/img-20250802-wa0007-019d3e56-919e-776d-aa61-89a35cdad628.jpg",
+    caption: "Criss Financial - Achievement Recognition",
+  },
+  {
+    src: "/assets/img_20260329_205345-019d3e56-9328-7078-b1eb-9964f2c96628.png",
+    caption: "SK Website Designer & Developer",
+  },
+  {
+    src: "/assets/screenshot_2026-03-29-18-47-37-63_40deb401b9ffe8e1df2f1cc5ba480b12-019d3e56-96ce-73ae-8d5a-5537290ae5d2.jpg",
+    caption: "SK Parcel Delivery Hub",
+  },
+  {
+    src: "/assets/img_20260211_200622-019d3e56-986c-756f-a5a5-ab587d96e762.png",
+    caption: "CIBIL Analysis in NBFC",
+  },
+  {
+    src: "/assets/img_20260212_222126-019d3e56-9967-731f-b968-c7e78071264e.png",
+    caption: "5 C's of Credit in NBFC",
+  },
+  {
+    src: "/assets/img_20260212_225324-019d3e56-99d8-7089-9579-62bd28746718.png",
+    caption: "Credit Underwriting: Smart Lending",
+  },
+  {
+    src: "/assets/chatgpt_image_feb_15_2026_08_50_34_pm-019d3e56-9a42-71c8-b2b8-972c2a6f68f7.png",
+    caption: "Do's & Don'ts for Credit Manager in NBFC",
+  },
+];
+
 // ─────────────────────────── HELPERS ─────────────────────────────
 function scrollTo(href: string) {
   document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
@@ -181,7 +221,7 @@ function Header() {
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
                 className="text-sm font-medium text-foreground hover:text-gold transition-colors"
-                data-ocid={`nav.${link.label.toLowerCase()}.link`}
+                data-ocid={`nav.${link.label.toLowerCase().replace(/\s+/g, "-")}.link`}
               >
                 {link.label}
               </button>
@@ -270,7 +310,7 @@ function HeroSection() {
       data-ocid="hero.section"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-2 gap-12 items-center">
-        {/* Portrait placeholder */}
+        {/* Portrait */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -278,10 +318,12 @@ function HeroSection() {
           className="flex justify-center md:justify-start"
         >
           <div className="relative">
-            <div className="w-56 h-56 md:w-72 md:h-72 rounded-full bg-white/10 border-4 border-gold flex items-center justify-center">
-              <span className="font-serif text-white text-7xl md:text-8xl font-bold select-none">
-                SK
-              </span>
+            <div className="w-56 h-56 md:w-72 md:h-72 rounded-full border-4 border-gold overflow-hidden">
+              <img
+                src="/assets/img-20260121-wa0214-019d3e4e-36ce-728e-b593-0d2034a1fbff.jpg"
+                alt="Sarang Kumar"
+                className="w-full h-full object-cover object-top"
+              />
             </div>
             <div className="absolute -bottom-2 -right-2 w-20 h-20 rounded-full bg-gold opacity-20" />
           </div>
@@ -586,6 +628,222 @@ function PersonalSection() {
   );
 }
 
+type KnowledgeCard = { src: string; caption: string };
+
+function KnowledgeCardsSection() {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [cards, setCards] = useState<KnowledgeCard[]>([...KNOWLEDGE_CARDS]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const openLightbox = (index: number) => setLightboxIndex(index);
+  const closeLightbox = () => setLightboxIndex(null);
+
+  const goNext = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex + 1) % cards.length);
+  };
+
+  const goPrev = () => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((lightboxIndex - 1 + cards.length) % cards.length);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight") goNext();
+    else if (e.key === "ArrowLeft") goPrev();
+    else if (e.key === "Escape") closeLightbox();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const src = ev.target?.result as string;
+        setCards((prev) => [...prev, { src, caption: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input so same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  const deleteCard = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this card?")) return;
+    setCards((prev) => prev.filter((_, i) => i !== index));
+    setLightboxIndex((prev) => {
+      if (prev === null) return null;
+      if (cards.length - 1 === 0) return null;
+      if (index < prev) return prev - 1;
+      if (index === prev) return Math.min(prev, cards.length - 2);
+      return prev;
+    });
+  };
+
+  return (
+    <section
+      id="knowledge-cards"
+      className="bg-light-gray py-20"
+      data-ocid="knowledge_cards.section"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading>Knowledge Cards</SectionHeading>
+
+        {/* Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+        >
+          {cards.map((card, i) => (
+            <motion.div
+              key={`${card.src}-${i}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="group relative rounded-lg overflow-hidden border border-border shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white"
+              onClick={() => openLightbox(i)}
+              data-ocid={`knowledge_cards.item.${i + 1}`}
+            >
+              <button
+                onClick={(e) => deleteCard(i, e)}
+                className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md"
+                data-ocid={`knowledge_cards.delete_button.${i + 1}`}
+                type="button"
+                title="Delete card"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <div
+                className="bg-gray-50 flex items-center justify-center overflow-hidden"
+                style={{ height: "16rem" }}
+              >
+                <img
+                  src={card.src}
+                  alt={card.caption}
+                  className="max-h-64 w-full object-contain"
+                />
+              </div>
+              <div className="p-3">
+                <p className="text-xs font-semibold text-navy text-center leading-snug">
+                  {card.caption}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Upload button */}
+        <div className="mt-10 flex justify-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleFileChange}
+            data-ocid="knowledge_cards.upload_button"
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-navy hover:bg-navy/90 text-white font-semibold px-8 py-3 text-sm gap-2"
+            data-ocid="knowledge_cards.primary_button"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Card
+          </Button>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            key="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+            onClick={closeLightbox}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            data-ocid="knowledge_cards.modal"
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              className="absolute top-4 right-4 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeLightbox();
+              }}
+              data-ocid="knowledge_cards.close_button"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Prev button */}
+            <button
+              type="button"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                goPrev();
+              }}
+              data-ocid="knowledge_cards.pagination_prev"
+            >
+              <ChevronLeft className="w-7 h-7" />
+            </button>
+
+            {/* Image */}
+            <div
+              className="flex flex-col items-center gap-4 px-16"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <motion.img
+                key={lightboxIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                src={cards[lightboxIndex].src}
+                alt={cards[lightboxIndex].caption}
+                className="max-h-[80vh] max-w-[80vw] object-contain rounded-lg shadow-2xl"
+              />
+              <p className="text-white/90 text-sm font-medium text-center">
+                {cards[lightboxIndex].caption}
+              </p>
+              <p className="text-white/40 text-xs">
+                {lightboxIndex + 1} / {cards.length}
+              </p>
+            </div>
+
+            {/* Next button */}
+            <button
+              type="button"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                goNext();
+              }}
+              data-ocid="knowledge_cards.pagination_next"
+            >
+              <ChevronRight className="w-7 h-7" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
 function ContactSection() {
   return (
     <section
@@ -734,7 +992,7 @@ function Footer() {
                     type="button"
                     onClick={() => scrollTo(link.href)}
                     className="hover:text-gold transition-colors"
-                    data-ocid={`footer.${link.label.toLowerCase()}.link`}
+                    data-ocid={`footer.${link.label.toLowerCase().replace(/\s+/g, "-")}.link`}
                   >
                     {link.label}
                   </button>
@@ -776,6 +1034,7 @@ export default function App() {
         <EducationSection />
         <SkillsSection />
         <PersonalSection />
+        <KnowledgeCardsSection />
         <ContactSection />
       </main>
       <Footer />
