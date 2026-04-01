@@ -1,41 +1,160 @@
+import ChatWidget from "@/components/ChatWidget";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Toaster } from "@/components/ui/sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useActor } from "@/hooks/useActor";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import {
+  Activity,
   ArrowRight,
-  Calendar,
+  Award,
+  Building,
+  CheckCircle,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
+  Code,
   Download,
-  Gamepad2,
+  ExternalLink,
+  Eye,
   Github,
   Globe,
   Heart,
+  Layout,
   Linkedin,
+  Lock,
+  LogIn,
+  LogOut,
   Mail,
   MapPin,
   Menu,
-  MessageCircle,
+  Moon,
   Phone,
+  Search,
+  Shield,
+  ShoppingCart,
   Star,
+  Sun,
   Trash2,
+  TrendingUp,
   Twitter,
+  User,
+  Users,
   X,
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import React from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+// Business types (defined locally since they extend the backend declarations)
+interface Listing {
+  id: bigint;
+  title: string;
+  description: string;
+  category: string;
+  price: string;
+  techTags: string[];
+  status: string;
+  featured: boolean;
+}
+interface ServicePackage {
+  id: bigint;
+  name: string;
+  description: string;
+  price: string;
+  features: string[];
+  popular: boolean;
+}
+interface Inquiry {
+  id: bigint;
+  clientName: string;
+  email: string;
+  phone: string;
+  message: string;
+  serviceType: string;
+  status: string;
+  notes: string;
+  timestamp: bigint;
+}
+interface UserActivity {
+  id: bigint;
+  principalText: string;
+  action: string;
+  detail: string;
+  timestamp: bigint;
+}
+interface SearchTermCount {
+  term: string;
+  count: bigint;
+}
+interface BusinessActor {
+  getListings(): Promise<Listing[]>;
+  getPackages(): Promise<ServicePackage[]>;
+  submitInquiry(
+    name: string,
+    email: string,
+    phone: string,
+    message: string,
+    serviceType: string,
+  ): Promise<bigint>;
+  getMyInquiries(): Promise<Inquiry[]>;
+  getAllInquiries(): Promise<Inquiry[]>;
+  updateInquiryStatus(
+    id: bigint,
+    status: string,
+    notes: string,
+  ): Promise<boolean>;
+  getInsights(): Promise<[bigint, bigint, bigint, bigint]>;
+  updateListing(l: Listing): Promise<boolean>;
+  deleteListing(id: bigint): Promise<boolean>;
+  updatePackage(p: ServicePackage): Promise<boolean>;
+  isCallerAdmin(): Promise<boolean>;
+  logActivity(action: string, detail: string): Promise<void>;
+  getActivityLog(): Promise<UserActivity[]>;
+  getSearchTerms(): Promise<SearchTermCount[]>;
+}
 
-// ───────────────────────────── DATA ──────────────────────────────
-const NAV_LINKS = [
-  { label: "Home", href: "#home" },
-  { label: "Experience", href: "#experience" },
-  { label: "Education", href: "#education" },
-  { label: "Skills", href: "#skills" },
-  { label: "Knowledge Cards", href: "#knowledge-cards" },
-  { label: "Contact", href: "#contact" },
-];
+// ── Static image imports (required for build pipeline) ──────────────────────
+import profilePhoto from "/assets/img-20260121-wa0214-019d3e4e-36ce-728e-b593-0d2034a1fbff.jpg";
+import businessCard from "/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png";
+
+// Marketplace listing images
+import listingCorporate from "/assets/generated/listing-corporate.dim_800x500.jpg";
+import listingEcommerce from "/assets/generated/listing-ecommerce.dim_800x500.jpg";
+import listingEducation from "/assets/generated/listing-education.dim_800x500.jpg";
+import listingPortfolio from "/assets/generated/listing-portfolio.dim_800x500.jpg";
+import listingRealestate from "/assets/generated/listing-realestate.dim_800x500.jpg";
+import listingRestaurant from "/assets/generated/listing-restaurant.dim_800x500.jpg";
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const NAVY = "#0a1628";
+const GOLD = "#d4af37";
+const _GOLD_LIGHT = "#f0d060";
 
 const EXPERIENCE = [
   {
@@ -78,11 +197,7 @@ const EXPERIENCE = [
 ];
 
 const EDUCATION = [
-  {
-    degree: "S.S.C",
-    institution: "MHV High School",
-    year: "July 2016",
-  },
+  { degree: "S.S.C", institution: "MHV High School", year: "July 2016" },
   {
     degree: "Intermediate",
     institution: "HMV Junior College",
@@ -112,641 +227,569 @@ const SKILLS = [
   "Data Analysis",
 ];
 
-const LANGUAGES = ["Hindi", "English", "Telugu", "Marathi"];
+const LISTING_IMAGES: Record<string, string> = {
+  Corporate: listingCorporate,
+  "E-Commerce": listingEcommerce,
+  Restaurant: listingRestaurant,
+  "Real Estate": listingRealestate,
+  Education: listingEducation,
+  Portfolio: listingPortfolio,
+};
 
-const PROJECT_BULLETS = [
-  "Conducted manual testing of software applications, identifying defects and ensuring alignment with functional specifications.",
-  "Developed and executed detailed test cases and test scripts based on project requirements.",
-  "Collaborated with developers and product managers to reproduce and troubleshoot reported issues.",
-  "Reported and documented bugs and defects in the issue tracking system.",
-  "Participated in test case reviews and defect prioritization sessions.",
-  "Verified and validated software functionality, usability, and performance across environments.",
-  "Ensured adherence to testing best practices and company standards.",
+const DEFAULT_LISTINGS: Listing[] = [
+  {
+    id: 1n,
+    title: "Corporate Business Website",
+    description:
+      "Professional corporate site with services, team, and contact sections.",
+    category: "Corporate",
+    price: "₹15,000",
+    techTags: ["React", "Tailwind", "Node.js"],
+    status: "available",
+    featured: true,
+  },
+  {
+    id: 2n,
+    title: "E-Commerce Store",
+    description:
+      "Full-featured online store with cart, payments, and product management.",
+    category: "E-Commerce",
+    price: "₹25,000",
+    techTags: ["Next.js", "Stripe", "MongoDB"],
+    status: "available",
+    featured: true,
+  },
+  {
+    id: 3n,
+    title: "Restaurant & Food Portal",
+    description:
+      "Menu showcase, online ordering, and table reservation system.",
+    category: "Restaurant",
+    price: "₹18,000",
+    techTags: ["React", "Firebase", "Razorpay"],
+    status: "available",
+    featured: false,
+  },
+  {
+    id: 4n,
+    title: "Real Estate Listings",
+    description:
+      "Property showcase with filters, map integration, and lead capture.",
+    category: "Real Estate",
+    price: "₹22,000",
+    techTags: ["Vue.js", "Google Maps", "MySQL"],
+    status: "available",
+    featured: true,
+  },
+  {
+    id: 5n,
+    title: "Education & LMS Platform",
+    description:
+      "Course catalog, student portal, and online learning management system.",
+    category: "Education",
+    price: "₹30,000",
+    techTags: ["React", "Node.js", "PostgreSQL"],
+    status: "available",
+    featured: false,
+  },
+  {
+    id: 6n,
+    title: "Personal Portfolio Website",
+    description:
+      "Stunning personal portfolio with projects, resume, and contact form.",
+    category: "Portfolio",
+    price: "₹8,000",
+    techTags: ["React", "Tailwind", "Framer Motion"],
+    status: "available",
+    featured: false,
+  },
 ];
 
-const PERSONAL = [
-  { label: "Date of Birth", value: "23rd October 1999", icon: Calendar },
-  { label: "Marital Status", value: "Single", icon: Heart },
-  { label: "Religion", value: "Hindu", icon: Star },
-  { label: "Nationality", value: "Indian", icon: Globe },
+const DEFAULT_PACKAGES: ServicePackage[] = [
   {
-    label: "Languages",
-    value: "Hindi, English, Telugu, Marathi",
-    icon: MessageCircle,
+    id: 1n,
+    name: "Starter",
+    price: "₹8,000",
+    description: "Perfect for individuals and small businesses.",
+    features: [
+      "1–5 Page Website",
+      "Mobile Responsive",
+      "Basic SEO Setup",
+      "Contact Form",
+      "3 Revisions",
+      "1 Month Support",
+    ],
+    popular: false,
   },
-  { label: "Location", value: "Hyderabad, Telangana (18 years)", icon: MapPin },
   {
-    label: "Hobbies",
-    value: "Playing Cricket, Learning New Things",
-    icon: Gamepad2,
+    id: 2n,
+    name: "Professional",
+    price: "₹18,000",
+    description: "Ideal for growing businesses needing more functionality.",
+    features: [
+      "Up to 10 Pages",
+      "Custom Design",
+      "Advanced SEO",
+      "CMS Integration",
+      "E-Commerce Ready",
+      "Unlimited Revisions",
+      "3 Months Support",
+      "Google Analytics",
+    ],
+    popular: true,
   },
-  { label: "Strengths", value: "Quick Learner, Positive Mindset", icon: Zap },
+  {
+    id: 3n,
+    name: "Enterprise",
+    price: "₹35,000",
+    description: "Full-featured solution for large businesses.",
+    features: [
+      "Unlimited Pages",
+      "Custom Web App",
+      "Database Integration",
+      "Admin Dashboard",
+      "API Integrations",
+      "Priority Support 6 Months",
+      "Performance Optimization",
+      "Security Audit",
+    ],
+    popular: false,
+  },
 ];
 
-const KNOWLEDGE_CARDS = [
-  {
-    src: "/assets/img-20250802-wa0007-019d3e56-919e-776d-aa61-89a35cdad628.jpg",
-    caption: "Criss Financial - Achievement Recognition",
-  },
-  {
-    src: "/assets/img_20260329_205345-019d3e56-9328-7078-b1eb-9964f2c96628.png",
-    caption: "SK Website Designer & Developer",
-  },
-  {
-    src: "/assets/screenshot_2026-03-29-18-47-37-63_40deb401b9ffe8e1df2f1cc5ba480b12-019d3e56-96ce-73ae-8d5a-5537290ae5d2.jpg",
-    caption: "SK Parcel Delivery Hub",
-  },
-  {
-    src: "/assets/img_20260211_200622-019d3e56-986c-756f-a5a5-ab587d96e762.png",
-    caption: "CIBIL Analysis in NBFC",
-  },
-  {
-    src: "/assets/img_20260212_222126-019d3e56-9967-731f-b968-c7e78071264e.png",
-    caption: "5 C's of Credit in NBFC",
-  },
-  {
-    src: "/assets/img_20260212_225324-019d3e56-99d8-7089-9579-62bd28746718.png",
-    caption: "Credit Underwriting: Smart Lending",
-  },
-  {
-    src: "/assets/chatgpt_image_feb_15_2026_08_50_34_pm-019d3e56-9a42-71c8-b2b8-972c2a6f68f7.png",
-    caption: "Do's & Don'ts for Credit Manager in NBFC",
-  },
-];
-
-// ─────────────────────────── HELPERS ─────────────────────────────
-function scrollTo(href: string) {
-  document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getListingImage(category: string) {
+  return LISTING_IMAGES[category] || listingCorporate;
 }
 
-function isAchievementBullet(bullet: string) {
-  return bullet.includes("%");
+function statusColor(status: string) {
+  const map: Record<string, string> = {
+    new: "bg-blue-100 text-blue-800",
+    contacted: "bg-yellow-100 text-yellow-800",
+    inProgress: "bg-orange-100 text-orange-800",
+    closed: "bg-green-100 text-green-800",
+  };
+  return map[status] || "bg-gray-100 text-gray-800";
 }
 
-// ─────────────────────────── COMPONENTS ──────────────────────────
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-center mb-12">
-      <h2 className="font-serif text-3xl md:text-4xl font-bold text-navy uppercase tracking-widest">
-        {children}
-      </h2>
-      <div className="mt-3 mx-auto w-16 h-1 bg-gold rounded-full" />
-    </div>
-  );
-}
+// ══════════════════════════════════════════════════════════════════════════════
+// PERSONAL PORTFOLIO COMPONENTS
+// ══════════════════════════════════════════════════════════════════════════════
 
-// ─────────────────────────── SPLASH PAGE ─────────────────────────
 function SplashPage({ onNext }: { onNext: () => void }) {
-  const badges = [
-    "Credit Manager",
-    "B.Com Graduate",
-    "Hyderabad",
-    "4+ Years Experience",
-  ];
-
   return (
     <motion.div
-      key="splash"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, y: -40 }}
-      transition={{ duration: 0.6 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+      exit={{ opacity: 0 }}
+      className="min-h-screen flex flex-col items-center justify-center px-4"
       style={{
-        background:
-          "linear-gradient(135deg, #0a1628 0%, #0f2040 60%, #0a1628 100%)",
+        background: `linear-gradient(135deg, ${NAVY} 0%, #1a2f50 100%)`,
       }}
-      data-ocid="splash.panel"
     >
-      {/* Background decorative orbs */}
-      <div
-        className="absolute top-0 left-0 w-96 h-96 rounded-full pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)",
-          transform: "translate(-30%, -30%)",
-        }}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-96 h-96 rounded-full pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 70%)",
-          transform: "translate(30%, 30%)",
-        }}
-      />
-      {/* Gold top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
+      {/* Bold heading */}
+      <motion.h1
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-2xl sm:text-4xl font-bold tracking-widest mb-10 uppercase text-center"
+        style={{ color: GOLD, letterSpacing: "0.2em" }}
+      >
+        Web Designer and Developer
+      </motion.h1>
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-2xl w-full">
-        <motion.h2
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-white font-bold text-xl md:text-2xl tracking-wide uppercase mb-6"
-        >
-          Web Designer and Developer
-        </motion.h2>
-        {/* Profile photo */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8"
-        >
+      {/* Card */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="relative p-8 sm:p-12 max-w-md w-full"
+        style={{
+          border: `2px solid ${GOLD}`,
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        {/* Gold corner accents */}
+        {[
+          ["top-0 left-0", "border-t-4 border-l-4"],
+          ["top-0 right-0", "border-t-4 border-r-4"],
+          ["bottom-0 left-0", "border-b-4 border-l-4"],
+          ["bottom-0 right-0", "border-b-4 border-r-4"],
+        ].map(([pos, cls], i) => (
           <div
-            className="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden mx-auto"
-            style={{
-              border: "4px solid #d4af37",
-              boxShadow:
-                "0 0 30px rgba(212,175,55,0.35), 0 8px 32px rgba(0,0,0,0.5)",
-            }}
+            // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+            key={i}
+            className={`absolute ${pos} w-6 h-6 ${cls}`}
+            style={{ borderColor: GOLD }}
+          />
+        ))}
+
+        {/* Square profile photo */}
+        <div className="flex justify-center mb-6">
+          <div
+            className="w-32 h-32 overflow-hidden"
+            style={{ border: `3px solid ${GOLD}` }}
           >
             <img
-              src="/assets/img-20260121-wa0214-019d3e4e-36ce-728e-b593-0d2034a1fbff.jpg"
+              src={profilePhoto}
               alt="Sarang Kumar"
-              className="w-full h-full object-cover object-top"
+              className="w-full h-full object-cover"
             />
           </div>
-        </motion.div>
+        </div>
 
-        {/* Name */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.35 }}
-        >
-          <p
-            className="text-xs uppercase tracking-[0.4em] font-semibold mb-2"
-            style={{ color: "#d4af37" }}
-          >
-            Welcome
-          </p>
-          <h1 className="font-serif text-4xl md:text-6xl font-bold text-white tracking-wide mb-3">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white tracking-widest mb-1">
             SARANG KUMAR
-          </h1>
-          <div className="mx-auto w-24 h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent mb-4" />
-          <p className="text-white/60 text-sm md:text-base tracking-widest uppercase font-medium">
-            Credit Manager &nbsp;|&nbsp; Finance Professional &nbsp;|&nbsp;
-            Website Designer &amp; Developer
+          </h2>
+          <p className="text-sm mb-6" style={{ color: GOLD }}>
+            Credit Manager | Web Designer &amp; Developer
           </p>
-        </motion.div>
 
-        {/* Intro paragraph */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-6 text-white/70 text-base leading-relaxed max-w-lg"
-        >
-          Welcome to my professional portfolio. I am a Credit Manager with 4+
-          years of experience in financial operations, credit underwriting, and
-          data analysis, based in Hyderabad.
-        </motion.p>
+          <div className="flex flex-wrap gap-2 justify-center mb-8">
+            {[
+              "Credit Manager",
+              "B.Com Graduate",
+              "Hyderabad",
+              "4+ Years Experience",
+            ].map((b) => (
+              <span
+                key={b}
+                className="px-3 py-1 text-xs font-semibold rounded-full"
+                style={{
+                  background: "rgba(212,175,55,0.15)",
+                  color: GOLD,
+                  border: `1px solid ${GOLD}`,
+                }}
+              >
+                {b}
+              </span>
+            ))}
+          </div>
 
-        {/* Highlight badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.65 }}
-          className="mt-6 flex flex-wrap gap-3 justify-center"
-        >
-          {badges.map((badge) => (
-            <span
-              key={badge}
-              className="text-xs font-semibold px-4 py-1.5 rounded-full"
-              style={{
-                background: "rgba(212,175,55,0.12)",
-                border: "1px solid rgba(212,175,55,0.35)",
-                color: "#d4af37",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {badge}
-            </span>
-          ))}
-        </motion.div>
-
-        {/* NEXT button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-10"
-        >
-          <button
-            type="button"
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
             onClick={onNext}
-            className="group relative inline-flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-lg text-[#0a1628] transition-all duration-300 hover:scale-105"
-            style={{
-              background:
-                "linear-gradient(135deg, #d4af37 0%, #f0cc60 50%, #d4af37 100%)",
-              boxShadow:
-                "0 4px 24px rgba(212,175,55,0.45), 0 2px 8px rgba(0,0,0,0.3)",
-            }}
             data-ocid="splash.primary_button"
+            className="px-8 py-3 font-bold tracking-widest uppercase flex items-center gap-2 mx-auto"
+            style={{ background: GOLD, color: NAVY, border: "none" }}
           >
-            <span className="tracking-widest uppercase text-sm font-bold">
-              NEXT
-            </span>
-            <motion.span
-              animate={{ x: [0, 5, 0] }}
-              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.4 }}
-            >
-              <ArrowRight className="w-5 h-5" />
-            </motion.span>
-          </button>
-          <p className="mt-3 text-white/30 text-xs tracking-widest uppercase">
-            View Full Portfolio
-          </p>
-        </motion.div>
-      </div>
+            NEXT <ArrowRight size={18} />
+          </motion.button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
 
-function Header() {
-  const [scrolled, setScrolled] = useState(false);
+function PortfolioHeader({ activeSection }: { activeSection: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  const handleNavClick = (href: string) => {
-    setMenuOpen(false);
-    scrollTo(href);
-  };
-
+  const navLinks = [
+    { label: "Home", href: "#home" },
+    { label: "Experience", href: "#experience" },
+    { label: "Education", href: "#education" },
+    { label: "Skills", href: "#skills" },
+    { label: "Contact", href: "#contact" },
+  ];
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white shadow-md" : "bg-white"
-      }`}
+      className="sticky top-0 z-40 shadow-lg"
+      style={{ background: NAVY }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center text-white font-serif font-bold text-sm">
-              SK
-            </div>
-            <div className="leading-tight">
-              <p className="font-serif font-bold text-navy text-sm tracking-wide">
-                SARANG KUMAR
-              </p>
-              <p className="text-xs text-muted-foreground tracking-widest uppercase">
-                Finance Professional
-              </p>
-            </div>
-          </div>
-
-          {/* Desktop Nav */}
-          <nav
-            className="hidden md:flex items-center gap-6"
-            data-ocid="header.section"
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+        <span
+          className="text-xl font-bold"
+          style={{ color: GOLD, fontFamily: "PlayfairDisplay, serif" }}
+        >
+          SK
+        </span>
+        <nav className="hidden md:flex items-center gap-6">
+          {navLinks.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-sm transition-colors hover:text-yellow-400"
+              style={{
+                color: activeSection === l.href.slice(1) ? GOLD : "#cbd5e1",
+              }}
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://www.linkedin.com/in/sarang-kumar-854214257/"
+            target="_blank"
+            rel="noreferrer"
+            data-ocid="header.link"
+            title="LinkedIn"
           >
-            {NAV_LINKS.map((link) => (
-              <button
-                type="button"
-                key={link.href}
-                onClick={() => handleNavClick(link.href)}
-                className="text-sm font-medium text-foreground hover:text-gold transition-colors"
-                data-ocid={`nav.${link.label.toLowerCase().replace(/\s+/g, "-")}.link`}
-              >
-                {link.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <a
-              href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-12 h-12 rounded-full bg-[#0A66C2] flex items-center justify-center text-white hover:bg-[#004182] transition-colors shadow-md"
-              title="LinkedIn Profile"
-              data-ocid="header.linkedin.link"
-            >
-              <Linkedin className="w-6 h-6" />
-            </a>
-            <a
-              href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-gold hover:bg-gold-hover text-white font-semibold text-sm px-4 py-2 rounded-full shadow-md transition-colors whitespace-nowrap"
-              title="AI Demo Production"
-              data-ocid="header.ai-demo.link"
-            >
-              <Globe className="w-4 h-4" />
-              AI Demo Production
-            </a>
-            <Button
-              className="bg-gold hover:bg-gold-hover text-white font-semibold text-sm px-5"
-              data-ocid="header.download.button"
-              asChild
-            >
-              <a
-                href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
-                download="Sarang_Kumar_Resume.pdf"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Resume
-              </a>
-            </Button>
-          </div>
-
-          {/* Mobile hamburger */}
+            <Linkedin
+              size={28}
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            />
+          </a>
+          <a
+            href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:block text-xs px-3 py-1 rounded"
+            style={{
+              background: "rgba(212,175,55,0.15)",
+              color: GOLD,
+              border: `1px solid ${GOLD}`,
+            }}
+          >
+            AI Demo Production
+          </a>
+          <a
+            href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
+            download
+            className="hidden sm:flex items-center gap-1 text-xs px-3 py-1 rounded font-medium"
+            style={{ background: GOLD, color: NAVY }}
+          >
+            <Download size={12} /> Resume
+          </a>
           <button
             type="button"
-            className="md:hidden p-2 text-navy"
-            onClick={() => setMenuOpen((v) => !v)}
-            data-ocid="header.menu.toggle"
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ color: GOLD }}
           >
-            {menuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-border overflow-hidden"
+      {menuOpen && (
+        <div className="md:hidden px-4 pb-4" style={{ background: NAVY }}>
+          {navLinks.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="block py-2 text-sm text-slate-300 hover:text-yellow-400"
+              onClick={() => setMenuOpen(false)}
+            >
+              {l.label}
+            </a>
+          ))}
+          <a
+            href="https://www.linkedin.com/in/sarang-kumar-854214257/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 mt-2 text-blue-400"
           >
-            <div className="px-4 py-4 flex flex-col gap-3">
-              {NAV_LINKS.map((link) => (
-                <button
-                  type="button"
-                  key={link.href}
-                  onClick={() => handleNavClick(link.href)}
-                  className="text-left text-sm font-medium text-foreground hover:text-gold py-1"
-                >
-                  {link.label}
-                </button>
-              ))}
-              <a
-                href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-[#0A66C2] text-white rounded-lg px-4 py-2 mt-2 font-semibold"
-                data-ocid="mobile.linkedin.link"
-              >
-                <Linkedin className="w-5 h-5" />
-                View LinkedIn Profile
-              </a>
-              <a
-                href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-navy text-white rounded-lg px-4 py-2 mt-2 font-semibold hover:bg-navy/80 transition-colors"
-                data-ocid="mobile.ai-demo.link"
-              >
-                <Globe className="w-5 h-5" />
-                AI Demo Production
-              </a>
-              <Button
-                className="bg-gold hover:bg-gold-hover text-white mt-2"
-                data-ocid="mobile.download.button"
-                asChild
-              >
-                <a
-                  href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
-                  download="Sarang_Kumar_Resume.pdf"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Resume
-                </a>
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Linkedin size={20} /> LinkedIn
+          </a>
+          <a
+            href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 mt-2"
+            style={{ color: GOLD }}
+          >
+            <Globe size={16} /> AI Demo Production
+          </a>
+        </div>
+      )}
     </header>
   );
 }
 
-function HeroSection() {
+function PortfolioHero() {
   return (
     <section
       id="home"
-      className="relative bg-navy min-h-screen flex items-center pt-16"
-      data-ocid="hero.section"
+      className="py-20 px-4"
+      style={{
+        background: `linear-gradient(135deg, ${NAVY} 0%, #1a2f50 100%)`,
+      }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-2 gap-12 items-center">
-        {/* Portrait */}
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-10">
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7 }}
-          className="flex justify-center md:justify-start"
+          className="w-40 h-40 md:w-52 md:h-52 flex-shrink-0 overflow-hidden"
+          style={{ border: `4px solid ${GOLD}` }}
         >
-          <div className="relative">
-            <div className="w-56 h-56 md:w-72 md:h-72 rounded-full border-4 border-gold overflow-hidden">
-              <img
-                src="/assets/img-20260121-wa0214-019d3e4e-36ce-728e-b593-0d2034a1fbff.jpg"
-                alt="Sarang Kumar"
-                className="w-full h-full object-cover object-top"
-              />
-            </div>
-            <div className="absolute -bottom-2 -right-2 w-20 h-20 rounded-full bg-gold opacity-20" />
-          </div>
+          <img
+            src={profilePhoto}
+            alt="Sarang Kumar"
+            className="w-full h-full object-cover"
+          />
         </motion.div>
-
-        {/* Text block */}
         <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-          className="text-white text-center md:text-left"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
         >
-          <p className="text-gold uppercase tracking-widest text-sm font-semibold mb-3">
-            Finance Professional
-          </p>
-          <h1 className="font-serif text-4xl md:text-6xl font-bold leading-tight mb-6">
+          <h1
+            className="text-4xl md:text-5xl font-bold text-white mb-4"
+            style={{ fontFamily: "PlayfairDisplay, serif" }}
+          >
             Sarang Kumar
           </h1>
-          <p className="text-white/75 text-lg leading-relaxed mb-8 max-w-lg">
-            Credit Manager with expertise in LAP & NANO loan underwriting,
-            credit MIS reporting, income & bureau analysis, and financial
-            operations. Passionate about continuous learning and delivering
-            measurable results.
+          <p className="text-lg mb-2" style={{ color: GOLD }}>
+            Credit Manager | Web Designer &amp; Developer
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-            <Button
-              onClick={() => scrollTo("#experience")}
-              className="bg-gold hover:bg-gold-hover text-white px-8 py-3 text-base font-semibold"
-              data-ocid="hero.learn_more.button"
+          <p className="text-slate-300 mb-6 max-w-xl">
+            Dynamic professional with 4+ years of experience in credit
+            management and financial operations, blending analytical excellence
+            with modern web development skills.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
+              download
+              data-ocid="hero.primary_button"
+              className="flex items-center gap-2 px-5 py-2.5 font-semibold"
+              style={{ background: GOLD, color: NAVY }}
             >
-              Learn More
-            </Button>
-            <Button
-              variant="outline"
-              className="border-white/40 text-white bg-transparent hover:bg-white/10 px-8 py-3 text-base"
-              data-ocid="hero.contact.button"
-              onClick={() => scrollTo("#contact")}
+              <Download size={16} /> Download Resume
+            </a>
+            <a
+              href="#contact"
+              data-ocid="hero.secondary_button"
+              className="flex items-center gap-2 px-5 py-2.5 font-semibold border"
+              style={{ borderColor: GOLD, color: GOLD }}
             >
-              Get In Touch
-            </Button>
+              Contact Me
+            </a>
           </div>
         </motion.div>
       </div>
-
-      {/* Scroll cue */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.6 }}
-      >
-        <ChevronDown className="w-6 h-6" />
-      </motion.div>
     </section>
   );
 }
 
-function ObjectiveSection() {
+function SectionTitle({
+  title,
+  subtitle,
+}: { title: string; subtitle?: string }) {
   return (
-    <section id="objective" className="bg-white py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>My Objective</SectionHeading>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center text-lg text-muted-foreground leading-relaxed"
-        >
-          Looking for an exciting and dynamic role where I can utilize my skills
-          and experience to drive tangible results. Passionate about joining an
-          organization that fosters a culture of innovation, continuous
-          learning, and personal growth.
-        </motion.p>
-      </div>
-    </section>
+    <div className="text-center mb-14">
+      <h2
+        className="text-3xl font-bold"
+        style={{ color: NAVY, fontFamily: "PlayfairDisplay, serif" }}
+      >
+        {title}
+      </h2>
+      {subtitle && <p className="text-slate-500 mt-2">{subtitle}</p>}
+      <div className="w-16 h-1 mx-auto mt-3" style={{ background: GOLD }} />
+    </div>
   );
 }
 
 function ExperienceSection() {
   return (
-    <section
-      id="experience"
-      className="bg-light-gray py-20"
-      data-ocid="experience.section"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Work Experience</SectionHeading>
-
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-navy/20" />
-
-          <div className="space-y-10">
-            {EXPERIENCE.map((job, i) => (
-              <motion.div
-                key={job.title}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative pl-16"
-                data-ocid={`experience.item.${i + 1}`}
+    <section id="experience" className="py-20 px-6 bg-white">
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle
+          title="Work Experience"
+          subtitle="Professional journey & achievements"
+        />
+        <div
+          className="relative border-l-2 pl-8 space-y-10"
+          style={{ borderColor: GOLD }}
+        >
+          {EXPERIENCE.map((exp, i) => (
+            <motion.div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <div
+                className="absolute -left-2.5 w-5 h-5 rounded-full"
+                style={{ background: GOLD, top: i === 0 ? "0" : "auto" }}
+              />
+              <div
+                className="p-8 shadow-md"
+                style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
               >
-                {/* Circle marker */}
-                <div className="absolute left-3 top-1.5 w-5 h-5 rounded-full bg-navy border-4 border-white shadow" />
-
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-border">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 mb-3">
-                    <div>
-                      <h3 className="font-serif font-bold text-navy text-xl">
-                        {job.title}
-                      </h3>
-                      <p className="text-gold text-sm font-semibold mt-0.5">
-                        {job.company}
-                      </p>
-                    </div>
-                    <span className="text-xs bg-navy/10 text-navy font-medium px-3 py-1 rounded-full whitespace-nowrap">
-                      {job.period}
-                    </span>
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                  <div>
+                    <h3 className="text-lg font-bold" style={{ color: NAVY }}>
+                      {exp.title}
+                    </h3>
+                    <p className="text-sm font-medium" style={{ color: GOLD }}>
+                      {exp.company}
+                    </p>
                   </div>
-                  <ul className="space-y-2 mt-3">
-                    {job.bullets.map((b) =>
-                      isAchievementBullet(b) ? (
-                        <li
-                          key={b}
-                          className="flex gap-2 text-sm font-semibold text-navy items-start"
-                        >
-                          <span className="mt-1 text-gold text-xs flex-shrink-0">
-                            ★
-                          </span>
-                          <span className="bg-gold/10 border border-gold/30 text-navy rounded px-2 py-0.5 leading-snug">
-                            {b}
-                          </span>
-                        </li>
-                      ) : (
-                        <li
-                          key={b}
-                          className="flex gap-2 text-sm text-muted-foreground items-start"
-                        >
-                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                          {b}
-                        </li>
-                      ),
-                    )}
-                  </ul>
+                  <span
+                    className="text-xs px-2 py-1 rounded"
+                    style={{
+                      background: "rgba(212,175,55,0.15)",
+                      color: GOLD,
+                      border: `1px solid ${GOLD}`,
+                    }}
+                  >
+                    {exp.period}
+                  </span>
                 </div>
-              </motion.div>
-            ))}
+                <ul className="list-disc pl-5 space-y-1">
+                  {exp.bullets.map((b, j) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+                    <li key={j} className="text-sm text-slate-600">
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Project */}
+        <div className="mt-16">
+          <h3 className="text-xl font-bold mb-4" style={{ color: NAVY }}>
+            Project Experience
+          </h3>
+          <div
+            className="p-8 shadow-md"
+            style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+              <div>
+                <h4 className="font-bold" style={{ color: NAVY }}>
+                  Software Tester (Manual)
+                </h4>
+                <p className="text-sm" style={{ color: GOLD }}>
+                  Synoriq — Internship
+                </p>
+              </div>
+            </div>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
+              <li>Worked as a Manual Tester on live banking software.</li>
+              <li>
+                Designed and executed test cases for web and mobile banking
+                features.
+              </li>
+              <li>Performed regression, functional, and UAT testing.</li>
+              <li>
+                Identified and tracked 30+ bugs using Jira, improving software
+                quality by 20%.
+              </li>
+              <li>
+                Collaborated with developers to verify bug fixes and ensure
+                requirements compliance.
+              </li>
+              <li>
+                Documented test plans, results, and status reports for
+                stakeholders.
+              </li>
+              <li>
+                Participated in Agile sprints, contributing to sprint planning
+                and retrospectives.
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function ProjectSection() {
-  return (
-    <section
-      id="project"
-      className="bg-white py-20"
-      data-ocid="project.section"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Project</SectionHeading>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="bg-light-gray rounded-lg p-8 border border-border"
-        >
-          <div className="flex items-start justify-between flex-wrap gap-2 mb-4">
-            <div>
-              <h3 className="font-serif font-bold text-navy text-2xl">
-                Software Tester (Manual)
-              </h3>
-              <p className="text-gold font-semibold mt-1">Synoriq</p>
-            </div>
-            <Badge className="bg-navy text-white text-xs">Testing</Badge>
-          </div>
-          <ul className="space-y-2 mt-4">
-            {PROJECT_BULLETS.map((b) => (
-              <li key={b} className="flex gap-3 text-sm text-muted-foreground">
-                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                {b}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
       </div>
     </section>
   );
@@ -756,36 +799,36 @@ function EducationSection() {
   return (
     <section
       id="education"
-      className="bg-light-gray py-20"
-      data-ocid="education.section"
+      className="py-20 px-6"
+      style={{ background: "#f1f5f9" }}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Education</SectionHeading>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {EDUCATION.map((edu, i) => (
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle title="Education" />
+        <div className="grid md:grid-cols-3 gap-8">
+          {EDUCATION.map((e, i) => (
             <motion.div
-              key={edu.degree}
-              initial={{ opacity: 0, y: 30 }}
+              // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              data-ocid={`education.item.${i + 1}`}
+              transition={{ delay: i * 0.1 }}
+              className="p-8 text-center shadow-md"
+              style={{ background: "white", border: `2px solid ${GOLD}` }}
             >
-              <Card className="overflow-hidden border-0 shadow-md">
-                <CardHeader className="bg-navy py-4 px-5">
-                  <CardTitle className="text-white font-serif text-lg">
-                    {edu.degree}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="py-5 px-5">
-                  <p className="font-semibold text-foreground text-sm">
-                    {edu.institution}
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    {edu.year}
-                  </p>
-                </CardContent>
-              </Card>
+              <div
+                className="w-12 h-12 mx-auto mb-3 flex items-center justify-center rounded-full text-white font-bold"
+                style={{ background: GOLD, color: NAVY }}
+              >
+                {e.year.slice(-4)}
+              </div>
+              <h3 className="font-bold" style={{ color: NAVY }}>
+                {e.degree}
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">{e.institution}</p>
+              <p className="text-xs mt-2" style={{ color: GOLD }}>
+                {e.year}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -796,37 +839,45 @@ function EducationSection() {
 
 function SkillsSection() {
   return (
-    <section id="skills" className="bg-white py-20" data-ocid="skills.section">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Skills</SectionHeading>
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap gap-3 justify-center"
-        >
-          {SKILLS.map((skill) => (
-            <Badge
-              key={skill}
-              className="bg-navy/5 text-navy border border-navy/20 hover:bg-navy hover:text-white transition-colors text-sm px-4 py-2 rounded-full cursor-default"
+    <section id="skills" className="py-20 px-6 bg-white">
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle title="Skills & Languages" />
+        <div className="flex flex-wrap gap-3 justify-center mb-8">
+          {SKILLS.map((s, i) => (
+            <motion.span
+              // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+              key={i}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.03 }}
+              className="px-4 py-2 text-sm font-medium"
+              style={{
+                background: "rgba(212,175,55,0.1)",
+                color: NAVY,
+                border: `1px solid ${GOLD}`,
+              }}
             >
-              {skill}
-            </Badge>
+              {s}
+            </motion.span>
           ))}
-        </motion.div>
-
-        <div className="mt-10">
-          <h3 className="text-center font-serif font-bold text-navy text-xl mb-4">
-            Languages
-          </h3>
+        </div>
+        <div
+          className="p-6 text-center"
+          style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+        >
+          <h4 className="font-semibold mb-3" style={{ color: NAVY }}>
+            Languages Known
+          </h4>
           <div className="flex flex-wrap gap-3 justify-center">
-            {LANGUAGES.map((lang) => (
-              <Badge
-                key={lang}
-                className="bg-gold text-white border-0 text-sm px-4 py-2 rounded-full"
+            {["Hindi", "English", "Telugu", "Marathi"].map((l) => (
+              <span
+                key={l}
+                className="px-3 py-1 text-sm"
+                style={{ background: NAVY, color: "white" }}
               >
-                {lang}
-              </Badge>
+                {l}
+              </span>
             ))}
           </div>
         </div>
@@ -835,239 +886,72 @@ function SkillsSection() {
   );
 }
 
-function PersonalSection() {
+function PersonalProfileSection() {
   return (
-    <section
-      id="personal"
-      className="bg-light-gray py-20"
-      data-ocid="personal.section"
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Personal Profile</SectionHeading>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="rounded-xl border border-border shadow-md overflow-hidden"
-        >
-          {/* Card header bar */}
-          <div className="bg-navy px-6 py-4 flex items-center gap-3">
-            <div className="w-1 h-8 bg-gold rounded-full" />
-            <h3 className="font-serif text-white text-xl font-bold tracking-wide">
-              Personal Profile
-            </h3>
-          </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-border">
-            {PERSONAL.map((item, i) => {
-              const Icon = item.icon;
-              const isAlt = i % 2 !== 0;
-              return (
-                <div
-                  key={item.label}
-                  className={`flex items-center gap-5 px-6 py-4 ${
-                    isAlt ? "bg-gray-50" : "bg-white"
-                  }`}
+    <section className="py-20 px-6 bg-white">
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle title="Personal Profile" />
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-3 text-sm text-slate-700">
+            {[
+              ["Date of Birth", "23rd October 1999"],
+              ["Marital Status", "Single"],
+              ["Religion", "Hindu"],
+              ["Nationality", "Indian"],
+              ["Languages", "Hindi, English, Telugu, Marathi"],
+              ["Location", "Hyderabad — 18 years"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex gap-3">
+                <span
+                  className="font-semibold w-36 flex-shrink-0"
+                  style={{ color: NAVY }}
                 >
-                  {/* Icon */}
-                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-navy" />
-                  </div>
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-0.5">
-                      {item.label}
-                    </p>
-                    <p className="text-foreground font-semibold text-sm">
-                      {item.value}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                  {k}:
+                </span>
+                <span>{v}</span>
+              </div>
+            ))}
           </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-type KnowledgeCard = { src: string; caption: string };
-
-function KnowledgeCardsSection() {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [cards, setCards] = useState<KnowledgeCard[]>([...KNOWLEDGE_CARDS]);
-
-  const openLightbox = (index: number) => setLightboxIndex(index);
-  const closeLightbox = () => setLightboxIndex(null);
-
-  const goNext = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex + 1) % cards.length);
-  };
-
-  const goPrev = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex - 1 + cards.length) % cards.length);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowRight") goNext();
-    else if (e.key === "ArrowLeft") goPrev();
-    else if (e.key === "Escape") closeLightbox();
-  };
-
-  const deleteCard = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Delete this card?")) return;
-    setCards((prev) => prev.filter((_, i) => i !== index));
-    setLightboxIndex((prev) => {
-      if (prev === null) return null;
-      if (cards.length - 1 === 0) return null;
-      if (index < prev) return prev - 1;
-      if (index === prev) return Math.min(prev, cards.length - 2);
-      return prev;
-    });
-  };
-
-  return (
-    <section
-      id="knowledge-cards"
-      className="bg-light-gray py-20"
-      data-ocid="knowledge_cards.section"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Knowledge Cards</SectionHeading>
-
-        {/* Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
-        >
-          {cards.map((card, i) => (
-            <motion.div
-              key={`${card.src}-${i}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
-              className="group relative rounded-lg overflow-hidden border border-border shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white"
-              onClick={() => openLightbox(i)}
-              data-ocid={`knowledge_cards.item.${i + 1}`}
-            >
-              <button
-                onClick={(e) => deleteCard(i, e)}
-                className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md"
-                data-ocid={`knowledge_cards.delete_button.${i + 1}`}
-                type="button"
-                title="Delete card"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-              <div
-                className="bg-gray-50 flex items-center justify-center overflow-hidden"
-                style={{ height: "16rem" }}
-              >
-                <img
-                  src={card.src}
-                  alt={card.caption}
-                  className="max-h-64 w-full object-contain"
-                />
+          <div>
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2" style={{ color: NAVY }}>
+                Hobbies
+              </h4>
+              <div className="flex gap-2">
+                {["Cricket", "Learning New Tech"].map((h) => (
+                  <span
+                    key={h}
+                    className="px-3 py-1 text-sm"
+                    style={{
+                      background: "rgba(212,175,55,0.15)",
+                      color: GOLD,
+                      border: `1px solid ${GOLD}`,
+                    }}
+                  >
+                    {h}
+                  </span>
+                ))}
               </div>
-              <div className="p-3">
-                <p className="text-xs font-semibold text-navy text-center leading-snug">
-                  {card.caption}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Lightbox */}
-      <AnimatePresence>
-        {lightboxIndex !== null && (
-          <motion.div
-            key="lightbox"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
-            onClick={closeLightbox}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-            data-ocid="knowledge_cards.modal"
-          >
-            {/* Close button */}
-            <button
-              type="button"
-              className="absolute top-4 right-4 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                closeLightbox();
-              }}
-              data-ocid="knowledge_cards.close_button"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            {/* Prev button */}
-            <button
-              type="button"
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                goPrev();
-              }}
-              data-ocid="knowledge_cards.pagination_prev"
-            >
-              <ChevronLeft className="w-7 h-7" />
-            </button>
-
-            {/* Image */}
-            <div
-              className="flex flex-col items-center gap-4 px-16"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <motion.img
-                key={lightboxIndex}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                src={cards[lightboxIndex].src}
-                alt={cards[lightboxIndex].caption}
-                className="max-h-[80vh] max-w-[80vw] object-contain rounded-lg shadow-2xl"
-              />
-              <p className="text-white/90 text-sm font-medium text-center">
-                {cards[lightboxIndex].caption}
-              </p>
-              <p className="text-white/40 text-xs">
-                {lightboxIndex + 1} / {cards.length}
-              </p>
             </div>
-
-            {/* Next button */}
-            <button
-              type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gold transition-colors p-2 rounded-full bg-white/10 hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                goNext();
-              }}
-              data-ocid="knowledge_cards.pagination_next"
-            >
-              <ChevronRight className="w-7 h-7" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div>
+              <h4 className="font-semibold mb-2" style={{ color: NAVY }}>
+                Strengths
+              </h4>
+              <div className="flex gap-2">
+                {["Quick Learner", "Positive Mindset"].map((s) => (
+                  <span
+                    key={s}
+                    className="px-3 py-1 text-sm"
+                    style={{ background: "rgba(10,22,40,0.08)", color: NAVY }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -1076,360 +960,190 @@ function ContactSection() {
   return (
     <section
       id="contact"
-      className="bg-white py-20"
-      data-ocid="contact.section"
+      className="py-20 px-6"
+      style={{ background: "#f1f5f9" }}
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading>Contact Me</SectionHeading>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="grid sm:grid-cols-3 gap-6"
-        >
-          <a
-            href="mailto:Sarangkumar408@gmail.com"
-            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border hover:border-gold hover:shadow-md transition-all group"
-            data-ocid="contact.email.link"
-          >
-            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center group-hover:bg-navy transition-colors">
-              <Mail className="w-5 h-5 text-navy group-hover:text-white transition-colors" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                Email
-              </p>
-              <p className="text-sm text-foreground font-medium mt-0.5 break-all">
-                Sarangkumar408@gmail.com
-              </p>
-            </div>
-          </a>
-
-          <a
-            href="tel:+917095244790"
-            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border hover:border-gold hover:shadow-md transition-all group"
-            data-ocid="contact.phone.link"
-          >
-            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center group-hover:bg-navy transition-colors">
-              <Phone className="w-5 h-5 text-navy group-hover:text-white transition-colors" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                Phone
-              </p>
-              <p className="text-sm text-foreground font-medium mt-0.5">
-                +91 7095244790
-              </p>
-            </div>
-          </a>
-
-          <div
-            className="flex flex-col items-center gap-3 p-7 bg-light-gray rounded-lg border border-border"
-            data-ocid="contact.address.card"
-          >
-            <div className="w-12 h-12 rounded-full bg-navy/10 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-navy" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                Location
-              </p>
-              <p className="text-sm text-foreground font-medium mt-0.5">
-                Hanuman Nagar, Shankarpally, Hyderabad – 501203
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-function AdvertisementBanner() {
-  return (
-    <section
-      className="relative w-full overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(135deg, #0a1628 0%, #0f2040 50%, #0a1628 100%)",
-      }}
-      data-ocid="ad_banner.section"
-    >
-      {/* Gold top border accent */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-
-      {/* Advertisement label */}
-      <span className="absolute top-3 right-4 text-[10px] text-white/30 uppercase tracking-widest font-medium select-none">
-        Advertisement
-      </span>
-
-      {/* Decorative corner orb */}
-      <div
-        className="absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-10"
-        style={{
-          background: "radial-gradient(circle, #d4af37 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-10"
-        style={{
-          background: "radial-gradient(circle, #d4af37 0%, transparent 70%)",
-        }}
-      />
-
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-14">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
-        >
-          {/* Left content */}
-          <div className="flex-1 flex flex-col gap-6 text-center lg:text-left">
-            {/* Gold left accent bar (desktop only) */}
-            <div className="hidden lg:flex items-start gap-5">
-              <div className="w-1 self-stretch rounded-full bg-gradient-to-b from-yellow-400 to-yellow-600 flex-shrink-0" />
-              <div>
-                <p
-                  className="text-xs uppercase tracking-[0.3em] font-semibold mb-2"
-                  style={{ color: "#d4af37" }}
-                >
-                  Professional Services
-                </p>
-                <h2 className="font-serif text-3xl xl:text-4xl font-bold leading-tight text-white">
-                  SK <span style={{ color: "#d4af37" }}>Website Designer</span>
-                  <br />
-                  &amp; Developer
-                </h2>
-              </div>
-            </div>
-
-            {/* Mobile headline */}
-            <div className="lg:hidden">
-              <p
-                className="text-xs uppercase tracking-[0.3em] font-semibold mb-2"
-                style={{ color: "#d4af37" }}
-              >
-                Professional Services
-              </p>
-              <h2 className="font-serif text-3xl font-bold leading-tight text-white">
-                SK <span style={{ color: "#d4af37" }}>Website Designer</span>{" "}
-                &amp; Developer
-              </h2>
-            </div>
-
-            <p className="text-white/60 text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-              Professional Web Design &amp; Development Services — crafting
-              modern, responsive, and high-performance websites tailored to your
-              brand and business goals.
-            </p>
-
-            {/* Contact details */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "rgba(212,175,55,0.15)",
-                    border: "1px solid rgba(212,175,55,0.3)",
-                  }}
-                >
-                  <Phone className="w-3.5 h-3.5" style={{ color: "#d4af37" }} />
-                </div>
-                <span>+91 7095244790</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "rgba(212,175,55,0.15)",
-                    border: "1px solid rgba(212,175,55,0.3)",
-                  }}
-                >
-                  <Mail className="w-3.5 h-3.5" style={{ color: "#d4af37" }} />
-                </div>
-                <span>My@sk.webdeveloper.com</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "rgba(212,175,55,0.15)",
-                    border: "1px solid rgba(212,175,55,0.3)",
-                  }}
-                >
-                  <MapPin
-                    className="w-3.5 h-3.5"
-                    style={{ color: "#d4af37" }}
-                  />
-                </div>
-                <span>Hyderabad</span>
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="flex justify-center lg:justify-start">
-              <a
-                href="mailto:Sarangkumar408@gmail.com"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold text-sm text-[#0a1628] transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #d4af37 0%, #f0cc60 50%, #d4af37 100%)",
-                  boxShadow: "0 4px 20px rgba(212,175,55,0.35)",
-                }}
-                data-ocid="ad_banner.primary_button"
-              >
-                <Mail className="w-4 h-4" />
-                Get In Touch
-              </a>
-            </div>
-          </div>
-
-          {/* Right: business card image */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-shrink-0 flex justify-center"
-          >
-            <div
-              className="relative rounded-2xl overflow-hidden"
-              style={{
-                boxShadow:
-                  "0 0 40px rgba(212,175,55,0.25), 0 20px 60px rgba(0,0,0,0.5)",
-                border: "1px solid rgba(212,175,55,0.3)",
-              }}
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle title="Contact" subtitle="Get in touch" />
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: <Mail size={24} />,
+              label: "Email",
+              value: "sarangkumar408@gmail.com",
+              href: "mailto:sarangkumar408@gmail.com",
+            },
+            {
+              icon: <Phone size={24} />,
+              label: "Phone",
+              value: "+91 7095244790",
+              href: "tel:+917095244790",
+            },
+            {
+              icon: <MapPin size={24} />,
+              label: "Address",
+              value: "Hanuman Nagar, Shankarpally, Hyderabad 501203",
+              href: "#",
+            },
+          ].map((c, i) => (
+            <motion.a
+              // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+              key={i}
+              href={c.href}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center p-6 text-center shadow-md hover:shadow-lg transition-shadow"
+              style={{ background: "white", border: `2px solid ${GOLD}` }}
             >
-              <img
-                src="/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png"
-                alt="SK Website Designer & Developer - Business Card"
-                className="w-72 sm:w-80 lg:w-96 h-auto object-cover block"
-              />
-              {/* Subtle gold overlay shimmer */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(212,175,55,0.08) 0%, transparent 60%)",
-                }}
-              />
-            </div>
-          </motion.div>
-        </motion.div>
+              <div className="mb-3" style={{ color: GOLD }}>
+                {c.icon}
+              </div>
+              <p className="text-xs text-slate-400 mb-1">{c.label}</p>
+              <p className="font-medium text-sm" style={{ color: NAVY }}>
+                {c.value}
+              </p>
+            </motion.a>
+          ))}
+        </div>
       </div>
-
-      {/* Gold bottom border accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
     </section>
   );
 }
 
-function Footer() {
+function AdBanner() {
+  return (
+    <section className="py-12 px-4" style={{ background: NAVY }}>
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8">
+        <div className="flex-1">
+          <h2
+            className="text-2xl font-bold mb-3"
+            style={{ color: GOLD, fontFamily: "PlayfairDisplay, serif" }}
+          >
+            SK Website Designer &amp; Developer
+          </h2>
+          <p className="text-slate-300 mb-4 text-sm leading-relaxed">
+            Transform your business with a professional website. I specialize in
+            creating modern, responsive, and high-performance websites tailored
+            to your business needs. From simple portfolios to complex web
+            applications — delivered with excellence.
+          </p>
+          <div className="flex flex-col gap-2 text-sm text-slate-300 mb-5">
+            <span className="flex items-center gap-2">
+              <Phone size={14} style={{ color: GOLD }} /> +91 7095244790
+            </span>
+            <span className="flex items-center gap-2">
+              <Mail size={14} style={{ color: GOLD }} />{" "}
+              sarangkumar408@gmail.com
+            </span>
+            <span className="flex items-center gap-2">
+              <MapPin size={14} style={{ color: GOLD }} /> Hyderabad, Telangana
+            </span>
+          </div>
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-2 px-6 py-2.5 font-semibold"
+            style={{ background: GOLD, color: NAVY }}
+          >
+            Get In Touch <ArrowRight size={16} />
+          </a>
+        </div>
+        <div className="flex-shrink-0">
+          <img
+            src={businessCard}
+            alt="SK Business Card"
+            className="w-64 shadow-xl"
+            style={{ border: `2px solid ${GOLD}` }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PortfolioFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-navy text-white py-14" data-ocid="footer.section">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-3 gap-10 mb-10">
-          {/* Social */}
+    <footer className="py-14 px-6" style={{ background: "#040e1e" }}>
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-wrap justify-between gap-8 mb-8">
           <div>
-            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
-              Connect
-            </h4>
-            <div className="flex gap-4">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
-                data-ocid="footer.github.link"
-              >
-                <Github className="w-4 h-4" />
-              </a>
+            <h3 className="font-bold text-lg mb-3" style={{ color: GOLD }}>
+              Sarang Kumar
+            </h3>
+            <p className="text-slate-400 text-sm max-w-xs">
+              Credit Manager | Web Designer &amp; Developer based in Hyderabad,
+              India.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-3 text-white">Contact</h4>
+            <div className="space-y-2 text-sm text-slate-400">
+              <p>sarangkumar408@gmail.com</p>
+              <p>+91 7095244790</p>
+              <p>Hyderabad, Telangana 501203</p>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-3 text-white">Links</h4>
+            <div className="space-y-2">
               <a
                 href="https://www.linkedin.com/in/sarang-kumar-854214257/"
                 target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
-                data-ocid="footer.linkedin.link"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
               >
-                <Linkedin className="w-4 h-4" />
+                <Linkedin size={14} /> LinkedIn
               </a>
               <a
-                href="https://twitter.com"
+                href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
                 target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors"
-                data-ocid="footer.twitter.link"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm hover:text-yellow-300"
+                style={{ color: GOLD }}
               >
-                <Twitter className="w-4 h-4" />
+                <Globe size={14} /> AI Demo Production
+              </a>
+              <a
+                href="/assets/resume-_mr.sarang-019d3e3e-c529-700a-b7eb-02702da4c6a8.pdf"
+                download
+                className="flex items-center gap-2 text-sm text-slate-400 hover:text-white"
+              >
+                <Download size={14} /> Download Resume
               </a>
             </div>
-            <a
-              href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 border border-white/20 hover:border-gold hover:text-gold transition-colors rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap"
-              data-ocid="footer.ai-demo.link"
-            >
-              <Globe className="w-4 h-4" />
-              AI Demo Production
-            </a>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
-              Contact
-            </h4>
-            <div className="space-y-2 text-sm text-white/70">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gold" />
-                <span>Sarangkumar408@gmail.com</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-gold" />
-                <span>+91 7095244790</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-gold" />
-                <span>Hyderabad, Telangana</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Site Map */}
-          <div>
-            <h4 className="font-serif text-lg font-semibold mb-4 text-gold">
-              Site Map
-            </h4>
-            <ul className="space-y-2 text-sm text-white/70">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <button
-                    type="button"
-                    onClick={() => scrollTo(link.href)}
-                    className="hover:text-gold transition-colors"
-                    data-ocid={`footer.${link.label.toLowerCase().replace(/\s+/g, "-")}.link`}
-                  >
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
-
-        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-white/40">
-          <p>© {year} Sarang Kumar. All rights reserved.</p>
-          <p>
-            Built with love using{" "}
+        <div className="border-t border-slate-800 pt-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex gap-4">
+            <a
+              href="https://www.linkedin.com/in/sarang-kumar-854214257/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Linkedin
+                size={20}
+                className="text-slate-400 hover:text-blue-400"
+              />
+            </a>
+            <a href="https://github.com" target="_blank" rel="noreferrer">
+              <Github size={20} className="text-slate-400 hover:text-white" />
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noreferrer">
+              <Twitter
+                size={20}
+                className="text-slate-400 hover:text-sky-400"
+              />
+            </a>
+          </div>
+          <p className="text-xs text-slate-500">
+            &copy; {year}. Built with{" "}
+            <Heart size={12} className="inline text-red-400" /> using{" "}
             <a
               href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
               target="_blank"
-              rel="noopener noreferrer"
-              className="text-gold hover:text-gold/80 transition-colors"
+              rel="noreferrer"
+              className="underline hover:text-white"
             >
               caffeine.ai
             </a>
@@ -1440,9 +1154,26 @@ function Footer() {
   );
 }
 
-// ─────────────────────────────── APP ─────────────────────────────
-export default function App() {
+function PersonalPortfolioSite() {
   const [showSplash, setShowSplash] = useState(true);
+  const [activeSection, setActiveSection] = useState("home");
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: showSplash re-triggers observation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        }
+      },
+      { threshold: 0.3 },
+    );
+    const sections = document.querySelectorAll("section[id]");
+    for (const s of sections) {
+      observer.observe(s);
+    }
+    return () => observer.disconnect();
+  }, [showSplash]);
 
   return (
     <AnimatePresence mode="wait">
@@ -1450,29 +1181,2335 @@ export default function App() {
         <SplashPage key="splash" onNext={() => setShowSplash(false)} />
       ) : (
         <motion.div
-          key="main"
+          key="portfolio"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="min-h-screen"
         >
-          <Header />
-          <main>
-            <HeroSection />
-            <ObjectiveSection />
-            <ExperienceSection />
-            <ProjectSection />
-            <EducationSection />
-            <SkillsSection />
-            <PersonalSection />
-            <KnowledgeCardsSection />
-            <ContactSection />
-          </main>
-          <AdvertisementBanner />
-          <Footer />
+          <PortfolioHeader activeSection={activeSection} />
+          <PortfolioHero />
+          <section className="py-16 px-6 bg-white">
+            <div className="max-w-4xl mx-auto">
+              <SectionTitle title="Career Objective" />
+              <blockquote
+                className="text-center text-slate-600 italic border-l-4 pl-6 py-2 text-base max-w-2xl mx-auto"
+                style={{ borderColor: GOLD }}
+              >
+                "Seeking a dynamic role that leverages my financial expertise
+                and credit management skills to drive organizational growth
+                while continuously evolving as a professional."
+              </blockquote>
+            </div>
+          </section>
+          <ExperienceSection />
+          <EducationSection />
+          <SkillsSection />
+          <PersonalProfileSection />
+          <ContactSection />
+          <AdBanner />
+          <PortfolioFooter />
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BUSINESS SITE: SK WEB SOLUTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function BusinessHeader({
+  activePage,
+  setActivePage,
+  isAdmin,
+  onLogout,
+}: {
+  activePage: string;
+  setActivePage: (p: string) => void;
+  isAdmin: boolean;
+  onLogout: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sk-dark-mode") === "true";
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("sk-dark-mode", darkMode.toString());
+  }, [darkMode]);
+
+  const pages = [
+    { id: "landing", label: "Home" },
+    { id: "marketplace", label: "Marketplace" },
+    { id: "services", label: "Services" },
+    { id: "quote", label: "Get Quote" },
+    { id: "contact", label: "Contact" },
+    ...(isAdmin ? [{ id: "admin", label: "Admin" }] : []),
+  ];
+  return (
+    <header
+      className="sticky top-0 z-40 shadow-lg"
+      style={{ background: NAVY }}
+    >
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+        <button
+          type="button"
+          onClick={() => setActivePage("landing")}
+          className="text-xl font-bold"
+          style={{ color: GOLD, fontFamily: "PlayfairDisplay, serif" }}
+        >
+          SK Web Solutions
+        </button>
+        <nav className="hidden md:flex items-center gap-6">
+          {pages.map((p) => (
+            <button
+              type="button"
+              key={p.id}
+              onClick={() => setActivePage(p.id)}
+              className="text-sm transition-colors hover:text-yellow-400"
+              style={{ color: activePage === p.id ? GOLD : "#cbd5e1" }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setDarkMode((d) => !d)}
+            data-ocid="business.toggle"
+            className="p-1.5 rounded-full transition-colors hover:bg-white/10"
+            style={{ color: GOLD }}
+            title="Toggle dark mode"
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center gap-1 text-sm text-slate-300 hover:text-white"
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          )}
+          <button
+            type="button"
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ color: GOLD }}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </div>
+      {menuOpen && (
+        <div className="md:hidden px-4 pb-4" style={{ background: NAVY }}>
+          {pages.map((p) => (
+            <button
+              type="button"
+              key={p.id}
+              onClick={() => {
+                setActivePage(p.id);
+                setMenuOpen(false);
+              }}
+              className="block w-full text-left py-2 text-sm text-slate-300 hover:text-yellow-400"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </header>
+  );
+}
+
+function BusinessLanding({
+  setActivePage,
+}: { setActivePage: (p: string) => void }) {
+  return (
+    <div>
+      {/* Hero */}
+      <section
+        className="py-28 px-6 text-center"
+        style={{
+          background: `linear-gradient(135deg, ${NAVY} 0%, #1a2f50 100%)`,
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1
+            className="text-4xl md:text-6xl font-bold text-white mb-6"
+            style={{ fontFamily: "PlayfairDisplay, serif" }}
+          >
+            Crafting High-Performance{" "}
+            <span style={{ color: GOLD }}>Digital Solutions</span> for Modern
+            Businesses
+          </h1>
+          <p className="text-slate-300 text-lg mb-10 max-w-2xl mx-auto">
+            Professional web design &amp; development services in Hyderabad.
+            From stunning portfolios to full-scale e-commerce platforms.
+          </p>
+          <p className="flex items-center justify-center gap-1.5 text-slate-400 text-sm mb-6">
+            <MapPin size={14} style={{ color: GOLD }} />
+            Serving Hyderabad &amp; Beyond
+          </p>
+          <div className="flex flex-wrap gap-5 justify-center">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActivePage("marketplace")}
+              data-ocid="landing.primary_button"
+              className="px-8 py-3 font-bold"
+              style={{ background: GOLD, color: NAVY }}
+            >
+              View Marketplace
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActivePage("quote")}
+              data-ocid="landing.secondary_button"
+              className="px-8 py-3 font-bold border border-white text-white"
+              style={{ background: "transparent" }}
+            >
+              Get a Quote
+            </motion.button>
+          </div>
+        </motion.div>
+        {/* Stats */}
+        <div className="mt-18 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+          {[
+            ["6+", "Website Templates"],
+            ["3", "Service Packages"],
+            ["100%", "Custom Built"],
+            ["Hyderabad", "Based"],
+          ].map(([v, l], i) => (
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+              key={i}
+              className="p-4"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(212,175,55,0.3)",
+              }}
+            >
+              <div className="text-2xl font-bold" style={{ color: GOLD }}>
+                {v}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">{l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Tech Stack Section */}
+      <section className="py-16 px-6" style={{ background: "#0d1f3c" }}>
+        <div className="max-w-5xl mx-auto text-center">
+          <h2
+            className="text-2xl font-bold mb-2"
+            style={{ color: GOLD, fontFamily: "PlayfairDisplay, serif" }}
+          >
+            Technologies We Master
+          </h2>
+          <div
+            className="w-12 h-0.5 mx-auto mb-8"
+            style={{ background: GOLD }}
+          />
+          <div className="flex flex-wrap gap-3 justify-center">
+            {[
+              { name: "React", color: "#61dafb", bg: "rgba(97,218,251,0.12)" },
+              {
+                name: "Next.js",
+                color: "#ffffff",
+                bg: "rgba(255,255,255,0.08)",
+              },
+              {
+                name: "WordPress",
+                color: "#21759b",
+                bg: "rgba(33,117,155,0.18)",
+              },
+              {
+                name: "Tailwind CSS",
+                color: "#38bdf8",
+                bg: "rgba(56,189,248,0.12)",
+              },
+              {
+                name: "Node.js",
+                color: "#68a063",
+                bg: "rgba(104,160,99,0.15)",
+              },
+              {
+                name: "Tableau",
+                color: "#e97627",
+                bg: "rgba(233,118,39,0.15)",
+              },
+              { name: "MongoDB", color: "#4db33d", bg: "rgba(77,179,61,0.15)" },
+              { name: "Stripe", color: "#635bff", bg: "rgba(99,91,255,0.15)" },
+              { name: "Vue.js", color: "#42b883", bg: "rgba(66,184,131,0.15)" },
+              {
+                name: "Firebase",
+                color: "#ffca28",
+                bg: "rgba(255,202,40,0.12)",
+              },
+            ].map((tech, i) => (
+              <motion.span
+                key={tech.name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.08 }}
+                className="px-4 py-2 text-sm font-semibold rounded-full"
+                style={{
+                  background: tech.bg,
+                  color: tech.color,
+                  border: `1px solid ${tech.color}40`,
+                }}
+              >
+                {tech.name}
+              </motion.span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Case Studies Section */}
+      <section className="py-20 px-6" style={{ background: "#f1f5f9" }}>
+        <div className="max-w-5xl mx-auto">
+          <SectionTitle
+            title="Case Studies"
+            subtitle="Real results for real businesses"
+          />
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "RetailMax E-Commerce",
+                challenge:
+                  "Outdated store losing conversions due to slow performance and poor UX",
+                solution: "React + Next.js + Stripe",
+                results: [
+                  "40% increase in conversion rate",
+                  "60% faster load time",
+                  "2x mobile revenue",
+                ],
+                icon: <ShoppingCart size={24} />,
+              },
+              {
+                title: "EduLearn LMS",
+                challenge:
+                  "No online learning platform; students dependent on in-person classes",
+                solution: "React + Node.js + PostgreSQL",
+                results: [
+                  "500+ students enrolled in 30 days",
+                  "98% course completion rate",
+                  "3x instructor revenue",
+                ],
+                icon: <Users size={24} />,
+              },
+              {
+                title: "PropertyHub Real Estate",
+                challenge:
+                  "Manual lead capture causing delayed follow-ups and lost prospects",
+                solution: "Vue.js + Google Maps + MySQL",
+                results: [
+                  "3x more leads generated",
+                  "50% reduction in response time",
+                  "₹12L+ deals closed",
+                ],
+                icon: <Building size={24} />,
+              },
+            ].map((cs, i) => (
+              <motion.div
+                key={cs.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 8px 30px rgba(212,175,55,0.2)",
+                }}
+                className="bg-white shadow-md overflow-hidden"
+                data-ocid={`casestudies.item.${i + 1}`}
+                style={{ border: "1px solid #e2e8f0" }}
+              >
+                <div className="p-2" style={{ background: NAVY }}>
+                  <div className="flex items-center gap-2 px-4 py-2">
+                    <div style={{ color: GOLD }}>{cs.icon}</div>
+                    <h3 className="font-bold text-white text-sm">{cs.title}</h3>
+                  </div>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div>
+                    <p
+                      className="text-xs font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "#ef4444" }}
+                    >
+                      Challenge
+                    </p>
+                    <p className="text-sm text-slate-600">{cs.challenge}</p>
+                  </div>
+                  <div>
+                    <p
+                      className="text-xs font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "#3b82f6" }}
+                    >
+                      Solution
+                    </p>
+                    <p className="text-sm font-medium" style={{ color: NAVY }}>
+                      {cs.solution}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      className="text-xs font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "#16a34a" }}
+                    >
+                      Results
+                    </p>
+                    <ul className="space-y-1">
+                      {cs.results.map((r) => (
+                        <li
+                          key={r}
+                          className="flex items-center gap-2 text-xs text-slate-700"
+                        >
+                          <CheckCircle size={12} style={{ color: GOLD }} /> {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services overview */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <SectionTitle
+            title="What We Offer"
+            subtitle="Comprehensive web solutions for every need"
+          />
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <Layout size={32} />,
+                title: "Custom Web Design",
+                desc: "Unique, branded designs that reflect your identity and captivate visitors.",
+              },
+              {
+                icon: <Code size={32} />,
+                title: "Web Development",
+                desc: "Robust, scalable applications built with modern technologies.",
+              },
+              {
+                icon: <TrendingUp size={32} />,
+                title: "SEO & Growth",
+                desc: "Optimized for search engines to drive organic traffic and leads.",
+              },
+            ].map((s, i) => (
+              <motion.div
+                // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 text-center shadow-sm hover:shadow-md transition-shadow"
+                style={{ border: "1px solid #e2e8f0" }}
+              >
+                <div
+                  className="mx-auto mb-4 w-14 h-14 flex items-center justify-center"
+                  style={{ background: "rgba(212,175,55,0.15)", color: GOLD }}
+                >
+                  {s.icon}
+                </div>
+                <h3 className="font-bold mb-2" style={{ color: NAVY }}>
+                  {s.title}
+                </h3>
+                <p className="text-sm text-slate-500">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-6 text-center" style={{ background: NAVY }}>
+        <h2 className="text-3xl font-bold text-white mb-4">
+          Ready to Build Your Dream Website?
+        </h2>
+        <p className="text-slate-300 mb-8">
+          Contact us today and get a free consultation.
+        </p>
+        <Button
+          onClick={() => setActivePage("contact")}
+          className="px-8 py-3 font-bold"
+          style={{ background: GOLD, color: NAVY }}
+        >
+          Start Your Project
+        </Button>
+      </section>
+    </div>
+  );
+}
+
+function MarketplacePage({
+  setActivePage,
+  setPrefilledService,
+}: {
+  setActivePage: (p: string) => void;
+  setPrefilledService: (s: string) => void;
+}) {
+  const { actor, isFetching } = useActor();
+  const [listings, setListings] = useState<Listing[]>(DEFAULT_LISTINGS);
+  const [filter, setFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const searchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    (actor as unknown as BusinessActor)
+      .getListings()
+      .then((data) => {
+        if (data.length > 0) setListings(data);
+      })
+      .catch(() => {});
+  }, [actor, isFetching]);
+
+  function handleSearchChange(term: string) {
+    setSearchTerm(term);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (term.trim()) {
+      searchTimerRef.current = setTimeout(() => {
+        if (actor)
+          (actor as unknown as BusinessActor)
+            .logActivity("search", term.trim())
+            .catch(() => {});
+      }, 500);
+    }
+  }
+
+  const categories = [
+    "All",
+    ...Array.from(new Set(listings.map((l) => l.category))),
+  ];
+  const filtered = listings.filter((l) => {
+    const matchesFilter = filter === "All" || l.category === filter;
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      !q ||
+      l.title.toLowerCase().includes(q) ||
+      l.description.toLowerCase().includes(q) ||
+      l.category.toLowerCase().includes(q);
+    return matchesFilter && matchesSearch;
+  });
+
+  return (
+    <section className="py-20 px-6" style={{ background: "#f1f5f9" }}>
+      <div className="max-w-6xl mx-auto">
+        <SectionTitle
+          title="Website Marketplace"
+          subtitle="Ready-to-deploy templates for your industry"
+        />
+        {/* Search */}
+        <div className="flex justify-center mb-5">
+          <div className="relative w-full max-w-md">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="Search websites..."
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchTerm.trim() && actor) {
+                  if (searchTimerRef.current)
+                    clearTimeout(searchTimerRef.current);
+                  (actor as unknown as BusinessActor)
+                    .logActivity("search", searchTerm.trim())
+                    .catch(() => {});
+                }
+              }}
+              className="w-full pl-9 pr-4 py-2.5 border border-slate-200 bg-white text-sm outline-none focus:border-amber-400 transition-colors"
+              data-ocid="marketplace.search_input"
+            />
+          </div>
+        </div>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 justify-center mb-8">
+          {categories.map((cat) => (
+            <button
+              type="button"
+              key={cat}
+              onClick={() => setFilter(cat)}
+              data-ocid="marketplace.tab"
+              className="px-4 py-2 text-sm font-medium transition-colors"
+              style={
+                filter === cat
+                  ? { background: GOLD, color: NAVY }
+                  : {
+                      background: "white",
+                      color: NAVY,
+                      border: "1px solid #e2e8f0",
+                    }
+              }
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((l, i) => (
+            <motion.div
+              key={l.id.toString()}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0 8px 30px rgba(212,175,55,0.2)",
+              }}
+              className="bg-white shadow-md overflow-hidden"
+              data-ocid={`marketplace.item.${i + 1}`}
+            >
+              <div className="relative">
+                <img
+                  src={getListingImage(l.category)}
+                  alt={l.title}
+                  className="w-full h-48 object-cover"
+                />
+                {l.featured && (
+                  <span
+                    className="absolute top-3 left-3 text-xs font-bold px-2 py-1"
+                    style={{ background: GOLD, color: NAVY }}
+                  >
+                    Featured
+                  </span>
+                )}
+                <span
+                  className="absolute top-3 right-3 text-xs font-bold px-2 py-1 text-white"
+                  style={{ background: NAVY }}
+                >
+                  {l.category}
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-lg mb-1" style={{ color: NAVY }}>
+                  {l.title}
+                </h3>
+                <p className="text-sm text-slate-500 mb-3">{l.description}</p>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {l.techTags.map((t) => (
+                    <span
+                      key={t}
+                      className="text-xs px-2 py-0.5"
+                      style={{
+                        background: "rgba(212,175,55,0.1)",
+                        color: GOLD,
+                        border: `1px solid ${GOLD}`,
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-lg" style={{ color: GOLD }}>
+                    {l.price}
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setPrefilledService(l.category);
+                      setActivePage("contact");
+                    }}
+                    data-ocid={"marketplace.primary_button"}
+                    style={{ background: NAVY, color: "white" }}
+                  >
+                    Inquire Now
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ServicesPage({
+  setActivePage,
+}: { setActivePage: (p: string) => void }) {
+  const { actor, isFetching } = useActor();
+  const [packages, setPackages] = useState<ServicePackage[]>(DEFAULT_PACKAGES);
+
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    (actor as unknown as BusinessActor)
+      .getPackages()
+      .then((data) => {
+        if (data.length > 0) setPackages(data);
+      })
+      .catch(() => {});
+  }, [actor, isFetching]);
+
+  return (
+    <section className="py-20 px-6 bg-white">
+      <div className="max-w-5xl mx-auto">
+        <SectionTitle
+          title="Service Packages"
+          subtitle="Choose the right plan for your business"
+        />
+        <div className="grid md:grid-cols-3 gap-8">
+          {packages.map((pkg, i) => (
+            <motion.div
+              key={pkg.id.toString()}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0 8px 30px rgba(212,175,55,0.2)",
+              }}
+              className="relative p-6 shadow-md"
+              data-ocid={`services.item.${i + 1}`}
+              style={
+                pkg.popular
+                  ? { border: `2px solid ${GOLD}`, background: "#fefce8" }
+                  : { border: "1px solid #e2e8f0" }
+              }
+            >
+              {pkg.popular && (
+                <div
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1"
+                  style={{ background: GOLD, color: NAVY }}
+                >
+                  MOST POPULAR
+                </div>
+              )}
+              <h3 className="text-xl font-bold mb-1" style={{ color: NAVY }}>
+                {pkg.name}
+              </h3>
+              <div className="text-3xl font-bold mb-2" style={{ color: GOLD }}>
+                {pkg.price}
+              </div>
+              <p className="text-sm text-slate-500 mb-5">{pkg.description}</p>
+              <ul className="space-y-2 mb-6">
+                {pkg.features.map((f, j) => (
+                  <li
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+                    key={j}
+                    className="flex items-start gap-2 text-sm text-slate-600"
+                  >
+                    <CheckCircle
+                      size={16}
+                      className="flex-shrink-0 mt-0.5"
+                      style={{ color: GOLD }}
+                    />{" "}
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={() => setActivePage("contact")}
+                data-ocid={`services.primary_button.${i + 1}`}
+                className="w-full"
+                style={
+                  pkg.popular
+                    ? { background: GOLD, color: NAVY }
+                    : { background: NAVY, color: "white" }
+                }
+              >
+                Get Started
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ContactPage({ prefilledService }: { prefilledService: string }) {
+  const { actor, isFetching } = useActor();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+    serviceType: prefilledService || "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (prefilledService)
+      setForm((f) => ({ ...f, serviceType: prefilledService }));
+  }, [prefilledService]);
+
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Full name is required";
+    if (!form.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(form.email))
+      e.email = "Valid email is required";
+    if (!form.phone.trim()) e.phone = "Phone number is required";
+    if (!form.message.trim()) e.message = "Message is required";
+    if (!form.serviceType) e.serviceType = "Please select a service type";
+    return e;
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+    if (!actor) {
+      toast.error("Still connecting, please wait a moment and try again.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await (actor as unknown as BusinessActor).submitInquiry(
+        form.name,
+        form.email,
+        form.phone,
+        form.message,
+        form.serviceType,
+      );
+      setSubmitted(true);
+      (actor as unknown as BusinessActor)
+        .logActivity("inquiry", form.serviceType)
+        .catch(() => {});
+      toast.success("Inquiry submitted! We'll get back to you soon.");
+    } catch (err) {
+      console.error("Inquiry submission failed:", err);
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <section
+        className="py-20 px-4 text-center"
+        style={{ background: "#f1f5f9" }}
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          data-ocid="contact.success_state"
+        >
+          <CheckCircle
+            size={64}
+            className="mx-auto mb-4"
+            style={{ color: GOLD }}
+          />
+          <h2 className="text-2xl font-bold mb-2" style={{ color: NAVY }}>
+            Inquiry Submitted!
+          </h2>
+          <p className="text-slate-500">We'll contact you within 24 hours.</p>
+        </motion.div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-20 px-6" style={{ background: "#f1f5f9" }}>
+      <div className="max-w-2xl mx-auto">
+        <SectionTitle
+          title="Get In Touch"
+          subtitle="Tell us about your project"
+        />
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-8 shadow-md space-y-5"
+          data-ocid="contact.modal"
+        >
+          <div>
+            <Label htmlFor="c-name">Full Name *</Label>
+            <Input
+              id="c-name"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Your full name"
+              className="mt-1"
+              data-ocid="contact.input"
+            />
+            {errors.name && (
+              <p
+                className="text-red-500 text-xs mt-1"
+                data-ocid="contact.error_state"
+              >
+                {errors.name}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="c-email">Email *</Label>
+            <Input
+              id="c-email"
+              type="email"
+              value={form.email}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, email: e.target.value }))
+              }
+              placeholder="your@email.com"
+              className="mt-1"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="c-phone">Phone *</Label>
+            <Input
+              id="c-phone"
+              value={form.phone}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, phone: e.target.value }))
+              }
+              placeholder="+91 XXXXXXXXXX"
+              className="mt-1"
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="c-service">Service Type *</Label>
+            <Select
+              value={form.serviceType}
+              onValueChange={(v) => setForm((f) => ({ ...f, serviceType: v }))}
+            >
+              <SelectTrigger className="mt-1" data-ocid="contact.select">
+                <SelectValue placeholder="Select a service" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "New Website",
+                  "Website Upgrade",
+                  "E-Commerce",
+                  "Portfolio",
+                  "Other",
+                ].map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.serviceType && (
+              <p className="text-red-500 text-xs mt-1">{errors.serviceType}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="c-message">Message *</Label>
+            <Textarea
+              id="c-message"
+              value={form.message}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, message: e.target.value }))
+              }
+              placeholder="Describe your project..."
+              rows={4}
+              className="mt-1"
+              data-ocid="contact.textarea"
+            />
+            {errors.message && (
+              <p className="text-red-500 text-xs mt-1">{errors.message}</p>
+            )}
+          </div>
+          <Button
+            type="submit"
+            disabled={loading || isFetching}
+            className="w-full font-bold py-3"
+            style={{ background: GOLD, color: NAVY }}
+            data-ocid="contact.submit_button"
+          >
+            {isFetching
+              ? "Connecting..."
+              : loading
+                ? "Submitting..."
+                : "Submit Inquiry"}
+          </Button>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function ClientPortal() {
+  const { actor } = useActor();
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!actor) return;
+    (actor as unknown as BusinessActor)
+      .getMyInquiries()
+      .then((data) => {
+        setInquiries(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [actor]);
+
+  const statusSteps = ["new", "contacted", "inProgress", "closed"];
+
+  return (
+    <section className="py-20 px-6" style={{ background: "#f1f5f9" }}>
+      <div className="max-w-4xl mx-auto">
+        <SectionTitle title="My Portal" subtitle="Track your inquiry status" />
+        {loading ? (
+          <p
+            className="text-center text-slate-400"
+            data-ocid="portal.loading_state"
+          >
+            Loading inquiries...
+          </p>
+        ) : inquiries.length === 0 ? (
+          <div className="text-center py-10" data-ocid="portal.empty_state">
+            <p className="text-slate-400">
+              No inquiries found. Submit an inquiry from the Contact page.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {inquiries.map((inq, i) => (
+              <div
+                key={inq.id.toString()}
+                className="bg-white p-6 shadow-sm"
+                data-ocid={`portal.item.${i + 1}`}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-bold" style={{ color: NAVY }}>
+                      {inq.serviceType}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {inq.message.slice(0, 100)}
+                      {inq.message.length > 100 ? "..." : ""}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded font-medium ${statusColor(inq.status)}`}
+                  >
+                    {inq.status}
+                  </span>
+                </div>
+                <div className="flex gap-1">
+                  {statusSteps.map((step, j) => (
+                    <div
+                      key={step}
+                      className="flex-1 h-1.5 rounded-full"
+                      style={{
+                        background:
+                          statusSteps.indexOf(inq.status) >= j
+                            ? GOLD
+                            : "#e2e8f0",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AdminDashboard() {
+  const { actor } = useActor();
+  const [activeTab, setActiveTab] = useState("insights");
+  const [insights, setInsights] = useState<
+    [bigint, bigint, bigint, bigint] | null
+  >(null);
+  const [listings, setListings] = useState<Listing[]>(DEFAULT_LISTINGS);
+  const [packages, setPackages] = useState<ServicePackage[]>(DEFAULT_PACKAGES);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [inqStatus, setInqStatus] = useState("");
+  const [inqNotes, setInqNotes] = useState("");
+  const [editListing, setEditListing] = useState<Listing | null>(null);
+  const [editPackage, setEditPackage] = useState<ServicePackage | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [activityLog, setActivityLog] = useState<UserActivity[]>([]);
+  const [searchTerms, setSearchTerms] = useState<SearchTermCount[]>([]);
+
+  useEffect(() => {
+    if (!actor) return;
+    Promise.all([
+      (actor as unknown as BusinessActor).getInsights(),
+      (actor as unknown as BusinessActor).getListings(),
+      (actor as unknown as BusinessActor).getPackages(),
+      (actor as unknown as BusinessActor).getAllInquiries(),
+      (actor as unknown as BusinessActor).getActivityLog(),
+      (actor as unknown as BusinessActor).getSearchTerms(),
+    ])
+      .then(([ins, lst, pkg, inq, log, terms]) => {
+        setInsights(ins);
+        if (lst.length > 0) setListings(lst);
+        if (pkg.length > 0) setPackages(pkg);
+        setInquiries(inq);
+        setActivityLog(log);
+        setSearchTerms(terms);
+      })
+      .catch(() => {});
+  }, [actor]);
+
+  async function saveInquiryStatus() {
+    if (!actor || !selectedInquiry) return;
+    setSaving(true);
+    try {
+      await (actor as unknown as BusinessActor).updateInquiryStatus(
+        selectedInquiry.id,
+        inqStatus,
+        inqNotes,
+      );
+      setInquiries((prev) =>
+        prev.map((x) =>
+          x.id === selectedInquiry.id
+            ? { ...x, status: inqStatus, notes: inqNotes }
+            : x,
+        ),
+      );
+      setSelectedInquiry(null);
+      toast.success("Inquiry updated.");
+    } catch {
+      toast.error("Failed to update.");
+    }
+    setSaving(false);
+  }
+
+  async function saveListingEdit() {
+    if (!actor || !editListing) return;
+    setSaving(true);
+    try {
+      await (actor as unknown as BusinessActor).updateListing(editListing);
+      setListings((prev) =>
+        prev.map((x) => (x.id === editListing.id ? editListing : x)),
+      );
+      setEditListing(null);
+      toast.success("Listing updated.");
+    } catch {
+      toast.error("Failed to update.");
+    }
+    setSaving(false);
+  }
+
+  async function deleteListing(id: bigint) {
+    if (!actor) return;
+    try {
+      await (actor as unknown as BusinessActor).deleteListing(id);
+      setListings((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Listing deleted.");
+    } catch {
+      toast.error("Failed to delete.");
+    }
+  }
+
+  async function savePackageEdit() {
+    if (!actor || !editPackage) return;
+    setSaving(true);
+    try {
+      await (actor as unknown as BusinessActor).updatePackage(editPackage);
+      setPackages((prev) =>
+        prev.map((x) => (x.id === editPackage.id ? editPackage : x)),
+      );
+      setEditPackage(null);
+      toast.success("Package updated.");
+    } catch {
+      toast.error("Failed to update.");
+    }
+    setSaving(false);
+  }
+
+  const kpiTiles = insights
+    ? [
+        {
+          label: "Total Listings",
+          value: insights[0].toString(),
+          icon: <Globe size={24} />,
+        },
+        {
+          label: "Available Listings",
+          value: insights[1].toString(),
+          icon: <CheckCircle size={24} />,
+        },
+        {
+          label: "Total Inquiries",
+          value: insights[2].toString(),
+          icon: <Users size={24} />,
+        },
+        {
+          label: "New Inquiries",
+          value: insights[3].toString(),
+          icon: <Zap size={24} />,
+        },
+      ]
+    : [
+        {
+          label: "Total Listings",
+          value: listings.length.toString(),
+          icon: <Globe size={24} />,
+        },
+        {
+          label: "Available",
+          value: listings
+            .filter((l) => l.status === "available")
+            .length.toString(),
+          icon: <CheckCircle size={24} />,
+        },
+        {
+          label: "Inquiries",
+          value: inquiries.length.toString(),
+          icon: <Users size={24} />,
+        },
+        {
+          label: "New",
+          value: inquiries.filter((i) => i.status === "new").length.toString(),
+          icon: <Zap size={24} />,
+        },
+      ];
+
+  return (
+    <section
+      className="py-10 px-4"
+      style={{ background: "#f1f5f9", minHeight: "80vh" }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <h2
+          className="text-2xl font-bold mb-6"
+          style={{ color: NAVY, fontFamily: "PlayfairDisplay, serif" }}
+        >
+          Admin Dashboard
+        </h2>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6" style={{ background: NAVY }}>
+            {[
+              "insights",
+              "listings",
+              "inquiries",
+              "packages",
+              "users",
+              "activity",
+            ].map((t) => (
+              <TabsTrigger
+                key={t}
+                value={t}
+                className="capitalize"
+                data-ocid={"admin.tab"}
+                style={
+                  activeTab === t
+                    ? { background: GOLD, color: NAVY }
+                    : { color: "#cbd5e1" }
+                }
+              >
+                {t}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {/* Insights */}
+          <TabsContent value="insights">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {kpiTiles.map((kpi, i) => (
+                <motion.div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-6"
+                  style={{ background: NAVY }}
+                >
+                  <div style={{ color: GOLD }} className="mb-2">
+                    {kpi.icon}
+                  </div>
+                  <div className="text-3xl font-bold" style={{ color: GOLD }}>
+                    {kpi.value}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-1">{kpi.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Listings */}
+          <TabsContent value="listings">
+            <div className="bg-white shadow-sm overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {listings.map((l, i) => (
+                    <TableRow
+                      key={l.id.toString()}
+                      data-ocid={`admin.listings.row.${i + 1}`}
+                    >
+                      <TableCell className="font-medium">{l.title}</TableCell>
+                      <TableCell>{l.category}</TableCell>
+                      <TableCell>{l.price}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${l.status === "available" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}
+                        >
+                          {l.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditListing(l)}
+                            data-ocid="admin.edit_button"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteListing(l.id)}
+                            data-ocid="admin.delete_button"
+                          >
+                            Del
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* Inquiries */}
+          <TabsContent value="inquiries">
+            <div className="bg-white shadow-sm overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inquiries.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center text-slate-400 py-8"
+                        data-ocid="admin.inquiries.empty_state"
+                      >
+                        No inquiries yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    inquiries.map((inq, i) => (
+                      <TableRow
+                        key={inq.id.toString()}
+                        data-ocid={`admin.inquiries.row.${i + 1}`}
+                      >
+                        <TableCell>{inq.clientName}</TableCell>
+                        <TableCell>{inq.serviceType}</TableCell>
+                        <TableCell>{inq.email}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`text-xs px-2 py-1 rounded font-medium ${statusColor(inq.status)}`}
+                          >
+                            {inq.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedInquiry(inq);
+                              setInqStatus(inq.status);
+                              setInqNotes(inq.notes);
+                            }}
+                            data-ocid="admin.edit_button"
+                          >
+                            Manage
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* Packages */}
+          <TabsContent value="packages">
+            <div className="grid md:grid-cols-3 gap-6">
+              {packages.map((pkg, i) => (
+                <div
+                  key={pkg.id.toString()}
+                  className="bg-white p-5 shadow-sm"
+                  data-ocid={`admin.packages.item.${i + 1}`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-bold" style={{ color: NAVY }}>
+                      {pkg.name}
+                    </h3>
+                    <span className="font-bold" style={{ color: GOLD }}>
+                      {pkg.price}
+                    </span>
+                  </div>
+                  <ul className="text-xs text-slate-500 mb-3 space-y-1">
+                    {pkg.features.slice(0, 4).map((f, j) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static list with stable order
+                      <li key={j}>• {f}</li>
+                    ))}
+                  </ul>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditPackage(pkg)}
+                    data-ocid={`admin.packages.edit_button.${i + 1}`}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Users */}
+          <TabsContent value="users">
+            <div className="bg-white p-8 text-center shadow-sm">
+              <Users
+                size={48}
+                className="mx-auto mb-4"
+                style={{ color: GOLD }}
+              />
+              <h3 className="font-bold text-lg mb-2" style={{ color: NAVY }}>
+                User Management
+              </h3>
+              <p className="text-slate-500">
+                User management is handled via Internet Identity role
+                assignments. Admin roles are assigned through the backend access
+                control system.
+              </p>
+            </div>
+          </TabsContent>
+          {/* Activity */}
+          <TabsContent value="activity">
+            <div className="space-y-8">
+              {/* Login Summary KPI */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <LogIn size={20} style={{ color: GOLD }} />
+                  <h3 className="font-bold text-lg" style={{ color: NAVY }}>
+                    Login Summary
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-6" style={{ background: NAVY }}>
+                    <div style={{ color: GOLD }} className="mb-2">
+                      <LogIn size={24} />
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: GOLD }}>
+                      {
+                        new Set(
+                          activityLog
+                            .filter((a) => a.action === "login")
+                            .map((a) => a.principalText),
+                        ).size
+                      }
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      Unique Logged-In Users
+                    </div>
+                  </div>
+                  <div className="p-6" style={{ background: NAVY }}>
+                    <div style={{ color: GOLD }} className="mb-2">
+                      <Search size={24} />
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: GOLD }}>
+                      {activityLog.filter((a) => a.action === "search").length}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      Total Searches
+                    </div>
+                  </div>
+                  <div className="p-6" style={{ background: NAVY }}>
+                    <div style={{ color: GOLD }} className="mb-2">
+                      <Activity size={24} />
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: GOLD }}>
+                      {activityLog.filter((a) => a.action === "inquiry").length}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      Client Inquiries
+                    </div>
+                  </div>
+                  <div className="p-6" style={{ background: NAVY }}>
+                    <div style={{ color: GOLD }} className="mb-2">
+                      <Eye size={24} />
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: GOLD }}>
+                      {activityLog.filter((a) => a.action === "visit").length}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      Total Page Visits
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity Feed */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity size={20} style={{ color: GOLD }} />
+                  <h3 className="font-bold text-lg" style={{ color: NAVY }}>
+                    Recent Activity Feed
+                  </h3>
+                </div>
+                <div className="bg-white shadow-sm overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Detail</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {activityLog.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="text-center text-slate-400 py-8"
+                            data-ocid="activity.empty_state"
+                          >
+                            No activity recorded yet.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        activityLog
+                          .slice(-50)
+                          .reverse()
+                          // biome-ignore lint/suspicious/noArrayIndexKey: activity log entries reversed slice
+                          .map((entry, i) => {
+                            const date = new Date(
+                              Number(entry.timestamp) / 1_000_000,
+                            );
+                            const badgeStyle =
+                              entry.action === "login"
+                                ? { background: "#dbeafe", color: "#1e40af" }
+                                : entry.action === "search"
+                                  ? { background: "#fef3c7", color: "#92400e" }
+                                  : { background: "#dcfce7", color: "#166534" };
+                            return (
+                              <TableRow
+                                key={entry.id.toString()}
+                                data-ocid={`activity.row.${i + 1}`}
+                              >
+                                <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                                  {date.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="font-mono text-xs">
+                                  {entry.principalText.slice(0, 8)}...
+                                </TableCell>
+                                <TableCell>
+                                  <span
+                                    className="px-2 py-1 text-xs font-semibold rounded"
+                                    style={badgeStyle}
+                                  >
+                                    {entry.action}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-sm text-slate-600">
+                                  {entry.detail || "—"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Top Search Terms */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Search size={20} style={{ color: GOLD }} />
+                  <h3 className="font-bold text-lg" style={{ color: NAVY }}>
+                    Top Search Terms
+                  </h3>
+                </div>
+                <div className="bg-white shadow-sm overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Search Term</TableHead>
+                        <TableHead>Count</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {searchTerms.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center text-slate-400 py-8"
+                            data-ocid="activity.search.empty_state"
+                          >
+                            No searches recorded yet.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        [...searchTerms]
+                          .sort((a, b) => Number(b.count) - Number(a.count))
+                          .slice(0, 20)
+                          .map((s, i) => (
+                            <TableRow
+                              key={s.term}
+                              data-ocid={`activity.search.item.${i + 1}`}
+                            >
+                              <TableCell className="text-slate-400 text-sm">
+                                {i + 1}
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {s.term}
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className="px-2 py-1 text-xs font-bold rounded"
+                                  style={{
+                                    background: "#fef3c7",
+                                    color: "#92400e",
+                                  }}
+                                >
+                                  {s.count.toString()}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Edit Listing Dialog */}
+      <Dialog
+        open={!!editListing}
+        onOpenChange={(open) => !open && setEditListing(null)}
+      >
+        <DialogContent className="max-w-lg" data-ocid="admin.listing.dialog">
+          <DialogHeader>
+            <DialogTitle>Edit Listing</DialogTitle>
+          </DialogHeader>
+          {editListing && (
+            <div className="space-y-3">
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={editListing.title}
+                  onChange={(e) =>
+                    setEditListing({ ...editListing, title: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Input
+                  value={editListing.category}
+                  onChange={(e) =>
+                    setEditListing({ ...editListing, category: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Price</Label>
+                <Input
+                  value={editListing.price}
+                  onChange={(e) =>
+                    setEditListing({ ...editListing, price: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editListing.description}
+                  onChange={(e) =>
+                    setEditListing({
+                      ...editListing,
+                      description: e.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditListing(null)}
+                  data-ocid="admin.listing.cancel_button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveListingEdit}
+                  disabled={saving}
+                  style={{ background: GOLD, color: NAVY }}
+                  data-ocid="admin.listing.save_button"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Package Dialog */}
+      <Dialog
+        open={!!editPackage}
+        onOpenChange={(open) => !open && setEditPackage(null)}
+      >
+        <DialogContent className="max-w-lg" data-ocid="admin.package.dialog">
+          <DialogHeader>
+            <DialogTitle>Edit Package</DialogTitle>
+          </DialogHeader>
+          {editPackage && (
+            <div className="space-y-3">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editPackage.name}
+                  onChange={(e) =>
+                    setEditPackage({ ...editPackage, name: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Price</Label>
+                <Input
+                  value={editPackage.price}
+                  onChange={(e) =>
+                    setEditPackage({ ...editPackage, price: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editPackage.description}
+                  onChange={(e) =>
+                    setEditPackage({
+                      ...editPackage,
+                      description: e.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Features (one per line)</Label>
+                <Textarea
+                  value={editPackage.features.join("\n")}
+                  onChange={(e) =>
+                    setEditPackage({
+                      ...editPackage,
+                      features: e.target.value.split("\n"),
+                    })
+                  }
+                  rows={5}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditPackage(null)}
+                  data-ocid="admin.package.cancel_button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={savePackageEdit}
+                  disabled={saving}
+                  style={{ background: GOLD, color: NAVY }}
+                  data-ocid="admin.package.save_button"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Inquiry Dialog */}
+      <Dialog
+        open={!!selectedInquiry}
+        onOpenChange={(open) => !open && setSelectedInquiry(null)}
+      >
+        <DialogContent className="max-w-lg" data-ocid="admin.inquiry.dialog">
+          <DialogHeader>
+            <DialogTitle>Manage Inquiry</DialogTitle>
+          </DialogHeader>
+          {selectedInquiry && (
+            <div className="space-y-6">
+              <div className="text-sm space-y-1">
+                <p>
+                  <strong>Client:</strong> {selectedInquiry.clientName}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedInquiry.email}
+                </p>
+                <p>
+                  <strong>Service:</strong> {selectedInquiry.serviceType}
+                </p>
+                <p>
+                  <strong>Message:</strong> {selectedInquiry.message}
+                </p>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={inqStatus} onValueChange={setInqStatus}>
+                  <SelectTrigger
+                    className="mt-1"
+                    data-ocid="admin.inquiry.select"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["new", "contacted", "inProgress", "closed"].map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  value={inqNotes}
+                  onChange={(e) => setInqNotes(e.target.value)}
+                  rows={3}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedInquiry(null)}
+                  data-ocid="admin.inquiry.cancel_button"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveInquiryStatus}
+                  disabled={saving}
+                  style={{ background: GOLD, color: NAVY }}
+                  data-ocid="admin.inquiry.save_button"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
+function BusinessFooter({
+  onAdminLogin,
+  isAdmin,
+}: { onAdminLogin: () => void; isAdmin: boolean }) {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="py-14 px-6" style={{ background: "#040e1e" }}>
+      <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-8 mb-8">
+        <div>
+          <h3 className="font-bold text-lg mb-2" style={{ color: GOLD }}>
+            SK Web Solutions
+          </h3>
+          <p className="text-slate-400 text-sm max-w-xs">
+            Professional web design &amp; development services in Hyderabad.
+          </p>
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm mb-2 text-white">Contact</h4>
+          <div className="space-y-1 text-sm text-slate-400">
+            <p>sarangkumar408@gmail.com</p>
+            <p>+91 7095244790</p>
+            <p>Hyderabad, Telangana</p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-slate-800 pt-6">
+        <div className="flex flex-wrap gap-3 justify-center mb-5">
+          {[
+            { icon: <Lock size={13} />, label: "SSL Secured" },
+            { icon: <Shield size={13} />, label: "GDPR Compliant" },
+            { icon: <Award size={13} />, label: "Secure & Reliable" },
+          ].map((badge) => (
+            <span
+              key={badge.label}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full"
+              style={{
+                border: `1px solid ${GOLD}55`,
+                color: GOLD,
+                background: "rgba(212,175,55,0.06)",
+              }}
+            >
+              {badge.icon} {badge.label}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500 text-center">
+          &copy; {year}. Built with{" "}
+          <Heart size={12} className="inline text-red-400" /> using{" "}
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-white"
+          >
+            caffeine.ai
+          </a>
+        </p>
+        {!isAdmin && (
+          <p className="text-xs text-slate-700 text-center mt-2">
+            <button
+              type="button"
+              onClick={onAdminLogin}
+              className="hover:text-slate-500 transition-colors"
+            >
+              Admin Access
+            </button>
+          </p>
+        )}
+      </div>
+    </footer>
+  );
+}
+
+function QuoteCalculatorPage({
+  setActivePage,
+}: { setActivePage: (p: string) => void }) {
+  const [projectType, setProjectType] = React.useState<string>("");
+  const [pages, setPages] = React.useState<string>("");
+  const [addOns, setAddOns] = React.useState<string[]>([]);
+
+  const basePrices: Record<string, number> = {
+    "Basic Website": 8000,
+    "E-Commerce Store": 20000,
+    "Web App": 30000,
+    Portfolio: 6000,
+  };
+  const pageMultipliers: Record<string, number> = {
+    "1-5": 1,
+    "6-10": 1.5,
+    "10+": 2,
+  };
+  const addOnCosts: Record<string, number> = {
+    "SEO Setup": 3000,
+    CMS: 5000,
+    "API Integration": 8000,
+    "Admin Dashboard": 10000,
+    "Mobile App": 15000,
+  };
+
+  const base = basePrices[projectType] || 0;
+  const multiplier = pageMultipliers[pages] || 1;
+  const addOnTotal = addOns.reduce((sum, a) => sum + (addOnCosts[a] || 0), 0);
+  const total = Math.round(base * multiplier) + addOnTotal;
+
+  function toggleAddOn(name: string) {
+    setAddOns((prev) =>
+      prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name],
+    );
+  }
+
+  return (
+    <section className="py-20 px-6" style={{ background: "#f1f5f9" }}>
+      <div className="max-w-3xl mx-auto">
+        <SectionTitle
+          title="Project Quote Calculator"
+          subtitle="Get an instant estimate for your website project"
+        />
+        <div
+          className="bg-white shadow-lg p-8"
+          style={{ border: "1px solid #e2e8f0" }}
+        >
+          {/* Step 1 */}
+          <div className="mb-8">
+            <h3 className="font-bold mb-1" style={{ color: NAVY }}>
+              Step 1: Select Project Type
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              What kind of website do you need?
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {Object.keys(basePrices).map((type) => (
+                <button
+                  type="button"
+                  key={type}
+                  onClick={() => setProjectType(type)}
+                  data-ocid="quote.toggle"
+                  className="p-3 text-sm font-medium border-2 transition-all text-center"
+                  style={
+                    projectType === type
+                      ? {
+                          borderColor: GOLD,
+                          background: "rgba(212,175,55,0.12)",
+                          color: NAVY,
+                        }
+                      : { borderColor: "#e2e8f0", color: "#64748b" }
+                  }
+                >
+                  {type}
+                  <div
+                    className="text-xs mt-1 font-bold"
+                    style={{ color: GOLD }}
+                  >
+                    ₹{basePrices[type].toLocaleString("en-IN")}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="mb-8">
+            <h3 className="font-bold mb-1" style={{ color: NAVY }}>
+              Step 2: Number of Pages
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              How many pages will you need?
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              {Object.keys(pageMultipliers).map((p) => (
+                <button
+                  type="button"
+                  key={p}
+                  onClick={() => setPages(p)}
+                  data-ocid="quote.toggle"
+                  className="px-5 py-3 text-sm font-medium border-2 transition-all"
+                  style={
+                    pages === p
+                      ? {
+                          borderColor: GOLD,
+                          background: "rgba(212,175,55,0.12)",
+                          color: NAVY,
+                        }
+                      : { borderColor: "#e2e8f0", color: "#64748b" }
+                  }
+                >
+                  {p} pages
+                  {pageMultipliers[p] > 1 && (
+                    <span className="ml-1 text-xs" style={{ color: GOLD }}>
+                      ×{pageMultipliers[p]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="mb-8">
+            <h3 className="font-bold mb-1" style={{ color: NAVY }}>
+              Step 3: Add-Ons (Optional)
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Select any additional features you need.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {Object.entries(addOnCosts).map(([name, cost]) => {
+                const selected = addOns.includes(name);
+                return (
+                  <button
+                    type="button"
+                    key={name}
+                    onClick={() => toggleAddOn(name)}
+                    data-ocid="quote.checkbox"
+                    className="flex items-center justify-between px-4 py-3 text-sm border-2 transition-all text-left"
+                    style={
+                      selected
+                        ? {
+                            borderColor: GOLD,
+                            background: "rgba(212,175,55,0.1)",
+                            color: NAVY,
+                          }
+                        : { borderColor: "#e2e8f0", color: "#64748b" }
+                    }
+                  >
+                    <span className="flex items-center gap-2">
+                      {selected ? (
+                        <CheckCircle size={15} style={{ color: GOLD }} />
+                      ) : (
+                        <div className="w-4 h-4 border border-slate-300 rounded-sm" />
+                      )}
+                      {name}
+                    </span>
+                    <span className="font-bold" style={{ color: GOLD }}>
+                      +₹{cost.toLocaleString("en-IN")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Price display */}
+          <motion.div
+            layout
+            className="p-6 text-center mb-6"
+            style={{ background: NAVY, border: `2px solid ${GOLD}` }}
+          >
+            <p className="text-slate-400 text-sm mb-1">
+              Estimated Project Cost
+            </p>
+            <div
+              className="text-4xl font-bold"
+              style={{ color: GOLD, fontFamily: "PlayfairDisplay, serif" }}
+            >
+              {total > 0 ? `₹${total.toLocaleString("en-IN")}` : "—"}
+            </div>
+            {total === 0 && (
+              <p className="text-slate-500 text-xs mt-2">
+                Select project type and pages to see your estimate
+              </p>
+            )}
+            {total > 0 && (
+              <p className="text-slate-400 text-xs mt-2">
+                *Final price may vary based on specific requirements
+              </p>
+            )}
+          </motion.div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActivePage("contact")}
+            data-ocid="quote.primary_button"
+            className="w-full py-3 font-bold text-center"
+            style={{ background: GOLD, color: NAVY }}
+          >
+            Get Started — Contact Us Now
+          </motion.button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BusinessSite() {
+  const { login, clear, identity, isInitializing } = useInternetIdentity();
+  const { actor, isFetching } = useActor();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [activePage, setActivePage] = useState("landing");
+  const [prefilledService, setPrefilledService] = useState("");
+
+  useEffect(() => {
+    if (identity) {
+      setIsLoggedIn(true);
+      if (actor && !isFetching) {
+        actor
+          .isCallerAdmin()
+          .then((adminStatus) => {
+            setIsAdmin(adminStatus);
+            (actor as unknown as BusinessActor)
+              .logActivity("login", "")
+              .catch(() => {});
+          })
+          .catch(() => setIsAdmin(false));
+      }
+    } else {
+      setIsLoggedIn(false);
+      setIsAdmin(false);
+    }
+  }, [identity, actor, isFetching]);
+
+  useEffect(() => {
+    if (actor) {
+      (actor as unknown as BusinessActor)
+        .logActivity("visit", activePage)
+        .catch(() => {});
+    }
+  }, [activePage, actor]);
+
+  function handleLogin() {
+    login();
+  }
+  function handleLogout() {
+    clear();
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    setActivePage("landing");
+  }
+
+  if (isInitializing) {
+    return (
+      <div
+        className="flex items-center justify-center min-h-screen"
+        style={{ background: NAVY }}
+      >
+        <p style={{ color: GOLD }}>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <BusinessHeader
+        activePage={activePage}
+        setActivePage={setActivePage}
+        isAdmin={isAdmin}
+        onLogout={handleLogout}
+      />
+      <main>
+        {activePage === "landing" && (
+          <BusinessLanding setActivePage={setActivePage} />
+        )}
+        {activePage === "marketplace" && (
+          <MarketplacePage
+            setActivePage={setActivePage}
+            setPrefilledService={setPrefilledService}
+          />
+        )}
+        {activePage === "services" && (
+          <ServicesPage setActivePage={setActivePage} />
+        )}
+        {activePage === "quote" && (
+          <QuoteCalculatorPage setActivePage={setActivePage} />
+        )}
+        {activePage === "contact" && (
+          <ContactPage prefilledService={prefilledService} />
+        )}
+        {activePage === "portal" && isLoggedIn && <ClientPortal />}
+        {activePage === "admin" && isAdmin && <AdminDashboard />}
+      </main>
+      <BusinessFooter onAdminLogin={handleLogin} isAdmin={isAdmin} />
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ROOT APP — Site Switcher
+// ══════════════════════════════════════════════════════════════════════════════
+
+export default function App() {
+  const [activeSite, setActiveSite] = useState<"portfolio" | "business">(
+    "business",
+  );
+
+  return (
+    <>
+      <Toaster richColors position="top-right" />
+      {/* Top site switcher */}
+      <div className="sticky top-0 z-50 flex" style={{ background: "#020810" }}>
+        <button
+          type="button"
+          onClick={() => setActiveSite("business")}
+          data-ocid="site-switcher.business.tab"
+          className="flex-1 py-2.5 text-sm font-semibold transition-colors"
+          style={
+            activeSite === "business"
+              ? { background: GOLD, color: NAVY }
+              : { color: "#94a3b8", background: "transparent" }
+          }
+        >
+          🏢 SK Web Solutions
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSite("portfolio")}
+          data-ocid="site-switcher.portfolio.tab"
+          className="flex-1 py-2.5 text-sm font-semibold transition-colors"
+          style={
+            activeSite === "portfolio"
+              ? { background: GOLD, color: NAVY }
+              : { color: "#94a3b8", background: "transparent" }
+          }
+        >
+          👤 Personal Portfolio
+        </button>
+      </div>
+      <AnimatePresence mode="wait">
+        {activeSite === "portfolio" ? (
+          <motion.div
+            key="portfolio"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <PersonalPortfolioSite />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="business"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <BusinessSite />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <ChatWidget />
+    </>
   );
 }

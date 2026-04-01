@@ -1,31 +1,27 @@
-# Sarang Kumar Personal Portfolio
+# SK Web Solutions
 
 ## Current State
-New project with no existing application files.
+The site requires clients to log in via Internet Identity to access the portal tab. The navbar shows a Login button and conditionally shows Admin/Portal tabs. There is no anonymous visitor tracking.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Full personal portfolio website based on Sarang Kumar's resume
-- Hero section with name, title, and career objective CTA
-- Career Objective section
-- Work Experience timeline (3 roles: Credit Manager at Cris Financial, Process Associate at Spandana Sphoorthy, Operation Executive at Tata AIG)
-- Project section (Software Tester at Synoriq)
-- Education section (SSC, Intermediate, Graduation)
-- Skills section (software testing, MS Office, communication)
-- Personal Strength & Hobbies section
-- Personal Profile section (bio, languages, personal info)
-- Contact info display (address, phone, email)
-- Download Resume button (no actual file, just styled)
+- Anonymous page visit tracking on every page load
+- Visitors KPI card in admin Activity tab showing total visits and recent visits table
+- Hidden admin login link in footer
 
 ### Modify
-N/A
+- Remove Login button from public navbar
+- Remove Portal tab from public nav (clients see landing, marketplace, services, quote, contact freely)
+- Admin tab only shows when logged in as admin (unchanged)
+- Log visit on page load and page changes
 
 ### Remove
-N/A
+- Login button in BusinessHeader
+- Login-required gate on the portal page
 
 ## Implementation Plan
-1. Build a static frontend-only React app (no backend needed)
-2. Create sections: Hero, Objective, Experience, Projects, Education, Skills, Personal, Contact/Footer
-3. Use professional navy + gold design matching design preview
-4. Display all resume data in appropriate sections
+1. Modify BusinessHeader: remove Login button and Portal tab
+2. Add useEffect to log anonymous visit on activePage change
+3. Add Visitors KPI + recent visits table in admin Activity tab
+4. Add small Admin Login link in BusinessFooter
