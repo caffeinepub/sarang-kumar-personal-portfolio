@@ -241,7 +241,6 @@ export function InternetIdentityProvider({
           existingClient = await createAuthClient(createOptions);
           if (cancelled) return;
           setAuthClient(existingClient);
-          if (cancelled) return;
         }
         const isAuthenticated = await existingClient.isAuthenticated();
         if (cancelled) return;

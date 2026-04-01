@@ -50,7 +50,11 @@ const KB: Record<string, string> = {
   caseStudies:
     "Our proven case studies:\n\n🛒 **RetailMax E-Commerce** — Rebuilt their store with React + Next.js + Stripe. Result: 40% higher conversion rate, 60% faster load time.\n🎓 **EduLearn LMS** — Built a full learning platform with React + Node.js. Result: 500+ students enrolled in 30 days.\n🏠 **PropertyHub Real Estate** — Automated lead capture with Vue.js + Google Maps. Result: 3x more leads, 50% faster response time.\n\nVisit our website to see more examples!",
   quoteCalc:
-    "You can get an **instant project estimate** using our Quote Calculator! 🧮\n\nJust click **Get Quote** in the top navigation, then:\n1️⃣ Select your project type (Basic Website, E-Commerce, Web App, or Portfolio)\n2️⃣ Choose the number of pages\n3️⃣ Add optional features like SEO, CMS, API integration, Admin Dashboard, or Mobile App\n\nThe calculator shows your estimated cost in real-time. Base prices start from ₹6,000 for a portfolio up to ₹30,000+ for a full web app.",
+    "You can get an **instant project estimate** using our Quote Calculator! 🧮\n\nJust click **Get Quote** in the top navigation, then:\n1️⃣ Select your project type (Basic Website, E-Commerce, Web App, Portfolio, or **Interior Design**)\n2️⃣ Choose the number of pages\n3️⃣ Add optional features like SEO, CMS, API integration, Admin Dashboard, or Mobile App\n\nThe calculator shows your estimated cost in real-time. Base prices start from ₹6,000 for a portfolio up to ₹30,000+ for a full web app.",
+  interiorDesign:
+    "SK Web Solutions also offers **Interior Design Services**! 🏡\n\nOur interior design packages:\n\n🏠 **Residential Interior Design** — From ₹25,000 | Complete home makeovers for living rooms, bedrooms, and kitchens\n🏢 **Commercial Space Design** — From ₹40,000 | Office, retail, and hospitality spaces\n🎨 **3D Visualization & Rendering** — From ₹8,000 | Photorealistic renders before construction begins\n💬 **Interior Consultation** — ₹2,500 / session | Expert layout, palette, and material planning\n\nContact us through the website to discuss your space transformation!",
+  rendering3d:
+    "Our **3D Visualization & Rendering** service starts from ₹8,000! 🎨\n\nWe create photorealistic 3D renders of your space — residential or commercial — so you can visualize the final result before a single wall is touched. This includes:\n\n✅ Full room/space renders\n✅ Multiple angle views\n✅ Lighting and material previews\n✅ Quick revision rounds\n\nPerfect for homes, offices, restaurants, and retail spaces!",
 };
 
 function getLocalResponse(query: string): string {
@@ -142,6 +146,30 @@ function getLocalResponse(query: string): string {
     q.includes("how much")
   )
     return KB.quoteCalc;
+  if (
+    q.includes("interior") ||
+    q.includes("interior design") ||
+    q.includes("home design") ||
+    q.includes("space design") ||
+    q.includes("residential") ||
+    q.includes("commercial space") ||
+    q.includes("furniture")
+  )
+    return KB.interiorDesign;
+  if (
+    q.includes("3d render") ||
+    q.includes("3d visual") ||
+    q.includes("visualization") ||
+    q.includes("rendering") ||
+    q.includes("render")
+  )
+    return KB.rendering3d;
+  if (
+    q.includes("consultation") ||
+    q.includes("consult") ||
+    q.includes("session")
+  )
+    return "We offer two consultation services:\n\n💻 **Web Consultation** — Free initial call to discuss your website project needs, scope, and timeline.\n🏠 **Interior Design Consultation** — ₹2,500 per session for expert layout, palette, and material planning.\n\nContact us at sarangkumar408@gmail.com or fill the Contact form to book your consultation!";
   if (
     q.includes("hi") ||
     q.includes("hello") ||
