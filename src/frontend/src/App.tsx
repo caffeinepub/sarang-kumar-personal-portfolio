@@ -156,6 +156,69 @@ const NAVY = "#0a1628";
 const GOLD = "#d4af37";
 const _GOLD_LIGHT = "#f0d060";
 
+// ── ErrorBoundary ────────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("App error caught by ErrorBoundary:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            background: "#0a1628",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1.5rem",
+            padding: "2rem",
+          }}
+        >
+          <h1
+            style={{
+              color: "#d4af37",
+              fontSize: "1.5rem",
+              fontWeight: 700,
+              textAlign: "center",
+            }}
+          >
+            Something went wrong. Please refresh the page.
+          </h1>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              background: "#d4af37",
+              color: "#0a1628",
+              border: "none",
+              borderRadius: "6px",
+              padding: "0.75rem 2rem",
+              fontWeight: 700,
+              fontSize: "1rem",
+              cursor: "pointer",
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const EXPERIENCE = [
   {
     title: "Credit Manager",
@@ -3356,7 +3419,8 @@ function QuoteCalculatorPage({
 }
 
 function BusinessSite() {
-  const { login, clear, identity, isInitializing } = useInternetIdentity();
+  const { login, clear, identity, isInitializing, isLoginError } =
+    useInternetIdentity();
   const { actor, isFetching } = useActor();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -3401,7 +3465,7 @@ function BusinessSite() {
     setActivePage("landing");
   }
 
-  if (isInitializing) {
+  if (isInitializing && !isLoginError) {
     return (
       <div
         className="flex items-center justify-center min-h-screen"
@@ -3457,59 +3521,64 @@ export default function App() {
   );
 
   return (
-    <>
-      <Toaster richColors position="top-right" />
-      {/* Top site switcher */}
-      <div className="sticky top-0 z-50 flex" style={{ background: "#020810" }}>
-        <button
-          type="button"
-          onClick={() => setActiveSite("business")}
-          data-ocid="site-switcher.business.tab"
-          className="flex-1 py-2.5 text-sm font-semibold transition-colors"
-          style={
-            activeSite === "business"
-              ? { background: GOLD, color: NAVY }
-              : { color: "#94a3b8", background: "transparent" }
-          }
+    <ErrorBoundary>
+      <>
+        <Toaster richColors position="top-right" />
+        {/* Top site switcher */}
+        <div
+          className="sticky top-0 z-50 flex"
+          style={{ background: "#020810" }}
         >
-          🏢 SK Web Solutions
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveSite("portfolio")}
-          data-ocid="site-switcher.portfolio.tab"
-          className="flex-1 py-2.5 text-sm font-semibold transition-colors"
-          style={
-            activeSite === "portfolio"
-              ? { background: GOLD, color: NAVY }
-              : { color: "#94a3b8", background: "transparent" }
-          }
-        >
-          👤 Personal Portfolio
-        </button>
-      </div>
-      <AnimatePresence mode="wait">
-        {activeSite === "portfolio" ? (
-          <motion.div
-            key="portfolio"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <button
+            type="button"
+            onClick={() => setActiveSite("business")}
+            data-ocid="site-switcher.business.tab"
+            className="flex-1 py-2.5 text-sm font-semibold transition-colors"
+            style={
+              activeSite === "business"
+                ? { background: GOLD, color: NAVY }
+                : { color: "#94a3b8", background: "transparent" }
+            }
           >
-            <PersonalPortfolioSite />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="business"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            🏢 SK Web Solutions
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSite("portfolio")}
+            data-ocid="site-switcher.portfolio.tab"
+            className="flex-1 py-2.5 text-sm font-semibold transition-colors"
+            style={
+              activeSite === "portfolio"
+                ? { background: GOLD, color: NAVY }
+                : { color: "#94a3b8", background: "transparent" }
+            }
           >
-            <BusinessSite />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <ChatWidget />
-    </>
+            👤 Personal Portfolio
+          </button>
+        </div>
+        <AnimatePresence mode="wait">
+          {activeSite === "portfolio" ? (
+            <motion.div
+              key="portfolio"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <PersonalPortfolioSite />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="business"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <BusinessSite />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <ChatWidget />
+      </>
+    </ErrorBoundary>
   );
 }
