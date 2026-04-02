@@ -35,7 +35,6 @@ import {
   ArrowRight,
   Award,
   Building,
-  Building2,
   CheckCircle,
   ChevronDown,
   Code,
@@ -45,8 +44,6 @@ import {
   Github,
   Globe,
   Heart,
-  Home,
-  Layers,
   Layout,
   Linkedin,
   Lock,
@@ -55,7 +52,6 @@ import {
   Mail,
   MapPin,
   Menu,
-  MessageSquare,
   Moon,
   Phone,
   Search,
@@ -1296,7 +1292,6 @@ function BusinessHeader({
   onLogout: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = React.useState(false);
   const [darkMode, setDarkMode] = React.useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sk-dark-mode") === "true";
@@ -1313,12 +1308,6 @@ function BusinessHeader({
     localStorage.setItem("sk-dark-mode", darkMode.toString());
   }, [darkMode]);
 
-  React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const pages = [
     { id: "landing", label: "Home" },
     { id: "marketplace", label: "Marketplace" },
@@ -1330,14 +1319,7 @@ function BusinessHeader({
   return (
     <header
       className="sticky top-0 z-40 shadow-lg"
-      style={{
-        background: scrolled ? "rgba(10,22,40,0.85)" : NAVY,
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        boxShadow: scrolled
-          ? "0 4px 24px rgba(0,0,0,0.4)"
-          : "0 2px 8px rgba(0,0,0,0.3)",
-        borderBottom: scrolled ? `1px solid ${GOLD}30` : "none",
-      }}
+      style={{ background: NAVY }}
     >
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         <button
@@ -1409,99 +1391,6 @@ function BusinessHeader({
         </div>
       )}
     </header>
-  );
-}
-
-function InteriorDesignSection({
-  setActivePage,
-}: { setActivePage: (p: string) => void }) {
-  const services = [
-    {
-      icon: <Home size={28} />,
-      title: "Residential Interior Design",
-      desc: "Complete home makeovers — living rooms, bedrooms, kitchens — crafted for comfort and elegance.",
-      price: "From ₹25,000",
-    },
-    {
-      icon: <Building2 size={28} />,
-      title: "Commercial Space Design",
-      desc: "Office, retail, and hospitality spaces designed to impress clients and boost productivity.",
-      price: "From ₹40,000",
-    },
-    {
-      icon: <Layers size={28} />,
-      title: "3D Visualization & Rendering",
-      desc: "Photorealistic 3D renders so you see your space before a single wall is touched.",
-      price: "From ₹8,000",
-    },
-    {
-      icon: <MessageSquare size={28} />,
-      title: "Interior Consultation",
-      desc: "One-on-one expert sessions to plan layouts, palettes, and materials within your budget.",
-      price: "₹2,500 / session",
-    },
-  ];
-
-  return (
-    <section className="py-24 px-6" style={{ background: "#f8fafc" }}>
-      <div className="max-w-6xl mx-auto">
-        <SectionTitle
-          title="Interior Design Services"
-          subtitle="Transform spaces with creative, functional, and stunning design solutions"
-        />
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((s, i) => (
-            <motion.div
-              // biome-ignore lint/suspicious/noArrayIndexKey: static list
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{
-                scale: 1.03,
-                boxShadow: "0 12px 32px rgba(212,175,55,0.18)",
-              }}
-              data-ocid={`interior.item.${i + 1}`}
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden"
-              style={{ border: "1px solid #e2e8f0" }}
-            >
-              <div className="p-6 flex-1">
-                <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: "rgba(212,175,55,0.12)", color: GOLD }}
-                >
-                  {s.icon}
-                </div>
-                <h3
-                  className="font-bold text-lg mb-2"
-                  style={{ color: NAVY, fontFamily: "PlayfairDisplay, serif" }}
-                >
-                  {s.title}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4 leading-relaxed">
-                  {s.desc}
-                </p>
-                <p className="text-sm font-bold" style={{ color: GOLD }}>
-                  {s.price}
-                </p>
-              </div>
-              <div className="px-6 pb-6">
-                <button
-                  type="button"
-                  onClick={() => setActivePage("contact")}
-                  data-ocid={`interior.primary_button.${i + 1}`}
-                  className="w-full py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                  style={{ background: GOLD, color: NAVY }}
-                >
-                  Enquire Now
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -1819,9 +1708,6 @@ function BusinessLanding({
           </div>
         </div>
       </section>
-
-      {/* Interior Design Services */}
-      <InteriorDesignSection setActivePage={setActivePage} />
 
       {/* CTA */}
       <section className="py-20 px-6 text-center" style={{ background: NAVY }}>
@@ -3333,27 +3219,19 @@ function QuoteCalculatorPage({
     "E-Commerce Store": 20000,
     "Web App": 30000,
     Portfolio: 6000,
-    "Interior Design": 15000,
   };
   const pageMultipliers: Record<string, number> = {
     "1-5": 1,
     "6-10": 1.5,
     "10+": 2,
   };
-  const webAddOnCosts: Record<string, number> = {
+  const addOnCosts: Record<string, number> = {
     "SEO Setup": 3000,
     CMS: 5000,
     "API Integration": 8000,
     "Admin Dashboard": 10000,
     "Mobile App": 15000,
   };
-  const interiorAddOnCosts: Record<string, number> = {
-    "3D Rendering": 8000,
-    "Furniture Sourcing": 12000,
-    "Project Management": 10000,
-  };
-  const addOnCosts =
-    projectType === "Interior Design" ? interiorAddOnCosts : webAddOnCosts;
 
   const base = basePrices[projectType] || 0;
   const multiplier = pageMultipliers[pages] || 1;
