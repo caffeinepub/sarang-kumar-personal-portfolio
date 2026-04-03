@@ -170,7 +170,7 @@ export function PersonalPortfolio({
               <div className="flex justify-center mb-6">
                 <div className="w-28 h-28 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
-                    src="/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png"
+                    src="/assets/download-019d540e-2e49-7185-96c2-52f3ec7bb89c.webp"
                     alt="Sarang Kumar"
                     className="w-full h-full object-cover object-top"
                   />
@@ -311,7 +311,7 @@ export function PersonalPortfolio({
               <div className="flex justify-center">
                 <div className="w-48 h-48 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
-                    src="/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png"
+                    src="/assets/download-019d540e-2e49-7185-96c2-52f3ec7bb89c.webp"
                     alt="Sarang Kumar"
                     className="w-full h-full object-cover object-top"
                   />
