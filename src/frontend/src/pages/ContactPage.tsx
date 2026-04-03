@@ -59,7 +59,7 @@ export function ContactPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
 
   function validate(): boolean {
     const e: Errors = {};
@@ -76,23 +76,30 @@ export function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
+
+    if (!actor) {
+      toast.error(
+        "Still connecting to the server, please wait a moment and try again.",
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
-      if (actor) {
-        await (actor as unknown as FullBackend).submitInquiry(
-          form.name,
-          form.email,
-          form.phone,
-          form.message,
-          form.serviceType,
-        );
-        (actor as unknown as FullBackend)
-          .logActivity("inquiry", form.serviceType)
-          .catch(() => {});
-      }
+      await (actor as unknown as FullBackend).submitInquiry(
+        form.name,
+        form.email,
+        form.phone,
+        form.message,
+        form.serviceType,
+      );
+      (actor as unknown as FullBackend)
+        .logActivity("inquiry", form.serviceType)
+        .catch(() => {});
       setSubmitted(true);
       toast.success("Message sent! We'll get back to you within 24 hours.");
-    } catch {
+    } catch (err) {
+      console.error("Contact form submission error:", err);
       toast.error(
         "Failed to send message. Please email us directly at sarangkumar408@gmail.com",
       );
@@ -333,10 +340,14 @@ export function ContactPage() {
             type="submit"
             size="lg"
             className="w-full btn-gold text-base"
-            disabled={submitting}
+            disabled={submitting || isFetching}
             data-ocid="contact.submit_button"
           >
-            {submitting ? (
+            {isFetching ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Connecting...
+              </>
+            ) : submitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...
               </>

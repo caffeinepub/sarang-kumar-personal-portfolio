@@ -41,7 +41,7 @@ export function QuoteCalculatorPage() {
     email: "",
     phone: "",
   });
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
 
   const typeObj = PROJECT_TYPES.find((t) => t.id === selectedType);
   const pagesObj = PAGE_COUNTS.find((p) => p.id === selectedPages);
@@ -60,8 +60,18 @@ export function QuoteCalculatorPage() {
   }
 
   async function handleSubmit() {
-    if (!contactInfo.name || !contactInfo.email) {
+    if (!contactInfo.name.trim() || !contactInfo.email.trim()) {
       toast.error("Please fill in your name and email.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInfo.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (!actor) {
+      toast.error(
+        "Still connecting to the server, please wait a moment and try again.",
+      );
       return;
     }
     setSubmitting(true);
@@ -70,18 +80,22 @@ export function QuoteCalculatorPage() {
         .map((id) => ADDONS.find((a) => a.id === id)?.label)
         .join(", ");
       const message = `Quote Calculator Request:\nProject Type: ${typeObj?.label}\nPage Count: ${selectedPages}\nAdd-ons: ${addonNames || "None"}\nEstimate: ₹${totalEstimate.toLocaleString()}\nPhone: ${contactInfo.phone}`;
-      if (actor) {
-        await (actor as unknown as FullBackend).submitInquiry(
-          contactInfo.name,
-          contactInfo.email,
-          contactInfo.phone,
-          message,
-          typeObj?.label || "Website",
-        );
-      }
+      await (actor as unknown as FullBackend).submitInquiry(
+        contactInfo.name,
+        contactInfo.email,
+        contactInfo.phone,
+        message,
+        typeObj?.label || "Website",
+      );
+      (actor as unknown as FullBackend)
+        .logActivity("inquiry", typeObj?.label || "quote")
+        .catch(() => {});
       setSubmitted(true);
-    } catch {
-      toast.error("Submission failed. Please try the Contact page.");
+    } catch (err) {
+      console.error("Quote submission error:", err);
+      toast.error(
+        "Submission failed. Please try the Contact page or email sarangkumar408@gmail.com",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -349,10 +363,15 @@ export function QuoteCalculatorPage() {
             <Button
               className="btn-gold"
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || isFetching}
               data-ocid="quote.submit_button"
             >
-              {submitting ? (
+              {isFetching ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
+                  Connecting...
+                </>
+              ) : submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
                   Submitting...

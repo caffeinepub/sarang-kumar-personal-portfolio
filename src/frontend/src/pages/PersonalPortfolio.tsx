@@ -19,7 +19,7 @@ const SKILLS = [
   {
     icon: Globe,
     label: "Website Design & Development",
-    desc: "React, Next.js, WordPress \u2014 full-stack web development",
+    desc: "React, Next.js, WordPress — full-stack web development",
   },
   {
     icon: TrendingUp,
@@ -186,7 +186,7 @@ export function PersonalPortfolio({
                   Hyderabad, India
                 </p>
                 <p className="text-muted-foreground text-xs mt-1">
-                  Web Developer \u00b7 Designer \u00b7 Digital Solutions Expert
+                  Web Developer · Designer · Digital Solutions Expert
                 </p>
               </div>
 
@@ -246,7 +246,7 @@ export function PersonalPortfolio({
                   className="text-muted-foreground hover:text-foreground text-xs"
                   data-ocid="portfolio.secondary_button"
                 >
-                  \u2190 Back
+                  ← Back
                 </Button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -275,17 +275,17 @@ export function PersonalPortfolio({
                   About Me
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-4 text-sm">
-                  I\u2019m a passionate Web Designer & Developer based in
+                  I'm a passionate Web Designer &amp; Developer based in
                   Hyderabad with 3+ years of experience delivering
                   high-performance digital solutions for businesses across
                   India. I specialize in React, Next.js, and WordPress
                   development with a keen eye for UI/UX design.
                 </p>
                 <p className="text-muted-foreground leading-relaxed text-sm">
-                  Through SK Web Solutions, I\u2019ve helped 40+ clients
-                  transform their digital presence \u2014 from startups
-                  launching their first website to established businesses
-                  scaling their e-commerce operations.
+                  Through SK Web Solutions, I've helped 40+ clients transform
+                  their digital presence — from startups launching their first
+                  website to established businesses scaling their e-commerce
+                  operations.
                 </p>
                 <div className="flex gap-3 mt-6">
                   <a
@@ -364,11 +364,11 @@ export function PersonalPortfolio({
                     Available for Projects
                   </Badge>
                   <h3 className="font-display text-xl font-bold gold-text">
-                    SK Website Designer & Developer
+                    SK Website Designer &amp; Developer
                   </h3>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Hyderabad\u2019s trusted web development partner \u2014
-                    delivering premium digital solutions since 2022.
+                    Hyderabad's trusted web development partner — delivering
+                    premium digital solutions since 2022.
                   </p>
                 </div>
                 <Button
@@ -386,7 +386,7 @@ export function PersonalPortfolio({
           <footer className="border-t border-border/60 py-6">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
-                \u00a9 {new Date().getFullYear()} Sarang Kumar \u00b7{" "}
+                © {new Date().getFullYear()} Sarang Kumar ·{" "}
                 <a
                   href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
                   target="_blank"
