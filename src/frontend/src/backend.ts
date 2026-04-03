@@ -105,6 +105,48 @@ export enum UserRole {
     user = "user",
     guest = "guest"
 }
+export interface Listing {
+    id: bigint;
+    title: string;
+    description: string;
+    category: string;
+    price: string;
+    techTags: string[];
+    status: string;
+    featured: boolean;
+}
+export interface ServicePackage {
+    id: bigint;
+    name: string;
+    description: string;
+    price: string;
+    features: string[];
+    popular: boolean;
+}
+export interface Inquiry {
+    id: bigint;
+    caller: Principal;
+    clientName: string;
+    email: string;
+    phone: string;
+    message: string;
+    serviceType: string;
+    status: string;
+    notes: string;
+    timestamp: bigint;
+}
+export interface UserActivity {
+    id: bigint;
+    principal: Principal;
+    principalText: string;
+    action: string;
+    detail: string;
+    timestamp: bigint;
+}
+export interface SearchTermCount {
+    term: string;
+    count: bigint;
+}
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
     _caffeineStorageBlobsToDelete(): Promise<Array<Uint8Array>>;
@@ -116,6 +158,21 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getCallerUserRole(): Promise<UserRole>;
     isCallerAdmin(): Promise<boolean>;
+    getListings(): Promise<Listing[]>;
+    addListing(l: Listing): Promise<bigint>;
+    updateListing(l: Listing): Promise<boolean>;
+    deleteListing(id: bigint): Promise<boolean>;
+    getPackages(): Promise<ServicePackage[]>;
+    updatePackage(p: ServicePackage): Promise<boolean>;
+    submitInquiry(clientName: string, email: string, phone: string, message: string, serviceType: string): Promise<bigint>;
+    getMyInquiries(): Promise<Inquiry[]>;
+    getAllInquiries(): Promise<Inquiry[]>;
+    updateInquiryStatus(id: bigint, status: string, notes: string): Promise<boolean>;
+    getInsights(): Promise<[bigint, bigint, bigint, bigint]>;
+    logActivity(action: string, detail: string): Promise<void>;
+    getActivityLog(): Promise<UserActivity[]>;
+    getSearchTerms(): Promise<SearchTermCount[]>;
+    askAgent(query: string): Promise<string>;
 }
 import type { UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -259,6 +316,65 @@ export class Backend implements backendInterface {
             const result = await this.actor.isCallerAdmin();
             return result;
         }
+    }
+    async getListings(): Promise<Listing[]> {
+        const result = await this.actor.getListings();
+        return result as unknown as Listing[];
+    }
+    async addListing(l: Listing): Promise<bigint> {
+        const result = await this.actor.addListing(l as any);
+        return result as bigint;
+    }
+    async updateListing(l: Listing): Promise<boolean> {
+        const result = await this.actor.updateListing(l as any);
+        return result as boolean;
+    }
+    async deleteListing(id: bigint): Promise<boolean> {
+        const result = await this.actor.deleteListing(id);
+        return result as boolean;
+    }
+    async getPackages(): Promise<ServicePackage[]> {
+        const result = await this.actor.getPackages();
+        return result as unknown as ServicePackage[];
+    }
+    async updatePackage(p: ServicePackage): Promise<boolean> {
+        const result = await this.actor.updatePackage(p as any);
+        return result as boolean;
+    }
+    async submitInquiry(clientName: string, email: string, phone: string, message: string, serviceType: string): Promise<bigint> {
+        const result = await this.actor.submitInquiry(clientName, email, phone, message, serviceType);
+        return result as bigint;
+    }
+    async getMyInquiries(): Promise<Inquiry[]> {
+        const result = await this.actor.getMyInquiries();
+        return result as unknown as Inquiry[];
+    }
+    async getAllInquiries(): Promise<Inquiry[]> {
+        const result = await this.actor.getAllInquiries();
+        return result as unknown as Inquiry[];
+    }
+    async updateInquiryStatus(id: bigint, status: string, notes: string): Promise<boolean> {
+        const result = await this.actor.updateInquiryStatus(id, status, notes);
+        return result as boolean;
+    }
+    async getInsights(): Promise<[bigint, bigint, bigint, bigint]> {
+        const result = await this.actor.getInsights();
+        return result as unknown as [bigint, bigint, bigint, bigint];
+    }
+    async logActivity(action: string, detail: string): Promise<void> {
+        await this.actor.logActivity(action, detail);
+    }
+    async getActivityLog(): Promise<UserActivity[]> {
+        const result = await this.actor.getActivityLog();
+        return result as unknown as UserActivity[];
+    }
+    async getSearchTerms(): Promise<SearchTermCount[]> {
+        const result = await this.actor.getSearchTerms();
+        return result as unknown as SearchTermCount[];
+    }
+    async askAgent(query: string): Promise<string> {
+        const result = await this.actor.askAgent(query);
+        return result as string;
     }
 }
 function from_candid_UserRole_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {

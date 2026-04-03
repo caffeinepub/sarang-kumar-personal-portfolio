@@ -24,6 +24,48 @@ export interface _CaffeineStorageRefillResult {
   'success' : [] | [boolean],
   'topped_up_amount' : [] | [bigint],
 }
+export interface Listing {
+  'id' : bigint,
+  'title' : string,
+  'description' : string,
+  'category' : string,
+  'price' : string,
+  'techTags' : Array<string>,
+  'status' : string,
+  'featured' : boolean,
+}
+export interface ServicePackage {
+  'id' : bigint,
+  'name' : string,
+  'description' : string,
+  'price' : string,
+  'features' : Array<string>,
+  'popular' : boolean,
+}
+export interface Inquiry {
+  'id' : bigint,
+  'caller' : Principal,
+  'clientName' : string,
+  'email' : string,
+  'phone' : string,
+  'message' : string,
+  'serviceType' : string,
+  'status' : string,
+  'notes' : string,
+  'timestamp' : bigint,
+}
+export interface UserActivity {
+  'id' : bigint,
+  'principal' : Principal,
+  'principalText' : string,
+  'action' : string,
+  'detail' : string,
+  'timestamp' : bigint,
+}
+export interface SearchTermCount {
+  'term' : string,
+  'count' : bigint,
+}
 export interface _SERVICE {
   '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
   '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
@@ -44,6 +86,21 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'getListings' : ActorMethod<[], Array<Listing>>,
+  'addListing' : ActorMethod<[Listing], bigint>,
+  'updateListing' : ActorMethod<[Listing], boolean>,
+  'deleteListing' : ActorMethod<[bigint], boolean>,
+  'getPackages' : ActorMethod<[], Array<ServicePackage>>,
+  'updatePackage' : ActorMethod<[ServicePackage], boolean>,
+  'submitInquiry' : ActorMethod<[string, string, string, string, string], bigint>,
+  'getMyInquiries' : ActorMethod<[], Array<Inquiry>>,
+  'getAllInquiries' : ActorMethod<[], Array<Inquiry>>,
+  'updateInquiryStatus' : ActorMethod<[bigint, string, string], boolean>,
+  'getInsights' : ActorMethod<[], [bigint, bigint, bigint, bigint]>,
+  'logActivity' : ActorMethod<[string, string], undefined>,
+  'getActivityLog' : ActorMethod<[], Array<UserActivity>>,
+  'getSearchTerms' : ActorMethod<[], Array<SearchTermCount>>,
+  'askAgent' : ActorMethod<[string], string>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

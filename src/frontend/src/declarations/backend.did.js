@@ -24,6 +24,48 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Listing = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'description' : IDL.Text,
+  'category' : IDL.Text,
+  'price' : IDL.Text,
+  'techTags' : IDL.Vec(IDL.Text),
+  'status' : IDL.Text,
+  'featured' : IDL.Bool,
+});
+export const ServicePackage = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'price' : IDL.Text,
+  'features' : IDL.Vec(IDL.Text),
+  'popular' : IDL.Bool,
+});
+export const Inquiry = IDL.Record({
+  'id' : IDL.Nat,
+  'caller' : IDL.Principal,
+  'clientName' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
+  'message' : IDL.Text,
+  'serviceType' : IDL.Text,
+  'status' : IDL.Text,
+  'notes' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
+export const UserActivity = IDL.Record({
+  'id' : IDL.Nat,
+  'principal' : IDL.Principal,
+  'principalText' : IDL.Text,
+  'action' : IDL.Text,
+  'detail' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
+export const SearchTermCount = IDL.Record({
+  'term' : IDL.Text,
+  'count' : IDL.Nat,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -56,6 +98,21 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'getListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+  'addListing' : IDL.Func([Listing], [IDL.Nat], []),
+  'updateListing' : IDL.Func([Listing], [IDL.Bool], []),
+  'deleteListing' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'getPackages' : IDL.Func([], [IDL.Vec(ServicePackage)], ['query']),
+  'updatePackage' : IDL.Func([ServicePackage], [IDL.Bool], []),
+  'submitInquiry' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'getMyInquiries' : IDL.Func([], [IDL.Vec(Inquiry)], ['query']),
+  'getAllInquiries' : IDL.Func([], [IDL.Vec(Inquiry)], ['query']),
+  'updateInquiryStatus' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [IDL.Bool], []),
+  'getInsights' : IDL.Func([], [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat], ['query']),
+  'logActivity' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'getActivityLog' : IDL.Func([], [IDL.Vec(UserActivity)], ['query']),
+  'getSearchTerms' : IDL.Func([], [IDL.Vec(SearchTermCount)], ['query']),
+  'askAgent' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -76,6 +133,48 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const Listing = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'description' : IDL.Text,
+    'category' : IDL.Text,
+    'price' : IDL.Text,
+    'techTags' : IDL.Vec(IDL.Text),
+    'status' : IDL.Text,
+    'featured' : IDL.Bool,
+  });
+  const ServicePackage = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'price' : IDL.Text,
+    'features' : IDL.Vec(IDL.Text),
+    'popular' : IDL.Bool,
+  });
+  const Inquiry = IDL.Record({
+    'id' : IDL.Nat,
+    'caller' : IDL.Principal,
+    'clientName' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
+    'message' : IDL.Text,
+    'serviceType' : IDL.Text,
+    'status' : IDL.Text,
+    'notes' : IDL.Text,
+    'timestamp' : IDL.Int,
+  });
+  const UserActivity = IDL.Record({
+    'id' : IDL.Nat,
+    'principal' : IDL.Principal,
+    'principalText' : IDL.Text,
+    'action' : IDL.Text,
+    'detail' : IDL.Text,
+    'timestamp' : IDL.Int,
+  });
+  const SearchTermCount = IDL.Record({
+    'term' : IDL.Text,
+    'count' : IDL.Nat,
   });
   
   return IDL.Service({
@@ -109,6 +208,21 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'getListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+    'addListing' : IDL.Func([Listing], [IDL.Nat], []),
+    'updateListing' : IDL.Func([Listing], [IDL.Bool], []),
+    'deleteListing' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'getPackages' : IDL.Func([], [IDL.Vec(ServicePackage)], ['query']),
+    'updatePackage' : IDL.Func([ServicePackage], [IDL.Bool], []),
+    'submitInquiry' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'getMyInquiries' : IDL.Func([], [IDL.Vec(Inquiry)], ['query']),
+    'getAllInquiries' : IDL.Func([], [IDL.Vec(Inquiry)], ['query']),
+    'updateInquiryStatus' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [IDL.Bool], []),
+    'getInsights' : IDL.Func([], [IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat], ['query']),
+    'logActivity' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'getActivityLog' : IDL.Func([], [IDL.Vec(UserActivity)], ['query']),
+    'getSearchTerms' : IDL.Func([], [IDL.Vec(SearchTermCount)], ['query']),
+    'askAgent' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
   });
 };
 

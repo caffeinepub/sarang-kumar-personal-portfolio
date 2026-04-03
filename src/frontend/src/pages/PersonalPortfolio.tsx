@@ -19,7 +19,7 @@ const SKILLS = [
   {
     icon: Globe,
     label: "Website Design & Development",
-    desc: "React, Next.js, WordPress — full-stack web development",
+    desc: "React, Next.js, WordPress \u2014 full-stack web development",
   },
   {
     icon: TrendingUp,
@@ -45,6 +45,70 @@ const HIGHLIGHTS = [
   { value: "10+", label: "Technologies" },
 ];
 
+interface OrbConfig {
+  id: string;
+  top: string;
+  left: string;
+  width: number;
+  height: number;
+  animDuration: string;
+  animDelay: string;
+  animName: string;
+}
+
+const PORTFOLIO_ORBS: OrbConfig[] = [
+  {
+    id: "p-orb-1",
+    top: "8%",
+    left: "5%",
+    width: 90,
+    height: 90,
+    animDuration: "14s",
+    animDelay: "0s",
+    animName: "float-orb",
+  },
+  {
+    id: "p-orb-2",
+    top: "70%",
+    left: "80%",
+    width: 70,
+    height: 70,
+    animDuration: "18s",
+    animDelay: "3s",
+    animName: "float-orb-2",
+  },
+  {
+    id: "p-orb-3",
+    top: "50%",
+    left: "10%",
+    width: 50,
+    height: 50,
+    animDuration: "12s",
+    animDelay: "1.5s",
+    animName: "float-orb",
+  },
+  {
+    id: "p-orb-4",
+    top: "20%",
+    left: "85%",
+    width: 110,
+    height: 110,
+    animDuration: "20s",
+    animDelay: "5s",
+    animName: "float-orb-2",
+  },
+  {
+    id: "p-orb-5",
+    top: "88%",
+    left: "30%",
+    width: 60,
+    height: 60,
+    animDuration: "16s",
+    animDelay: "2s",
+    animName: "float-orb",
+  },
+];
+
 export function PersonalPortfolio({
   onSwitchToBusiness,
 }: PersonalPortfolioProps) {
@@ -54,10 +118,43 @@ export function PersonalPortfolio({
     <main className="min-h-screen bg-background" data-ocid="portfolio.section">
       {/* Intro Page */}
       {!showFull ? (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md">
+        <div
+          className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.11 0.03 255), oklch(0.16 0.03 255) 40%, oklch(0.14 0.04 80) 70%, oklch(0.12 0.025 255))",
+            backgroundSize: "300% 300%",
+            animation: "gradient-shift 12s ease infinite",
+          }}
+        >
+          {/* Animated floating orbs */}
+          {PORTFOLIO_ORBS.map((orb) => (
+            <div
+              key={orb.id}
+              style={{
+                position: "absolute",
+                top: orb.top,
+                left: orb.left,
+                width: orb.width,
+                height: orb.height,
+                borderRadius: "50%",
+                pointerEvents: "none",
+                background:
+                  "radial-gradient(circle, oklch(0.78 0.14 85 / 0.3), transparent 70%)",
+                animation: `${orb.animName} ${orb.animDuration} ease-in-out ${orb.animDelay} infinite`,
+              }}
+            />
+          ))}
+
+          <div className="w-full max-w-md relative z-10">
             {/* Executive Box */}
-            <div className="relative border-2 border-primary p-8 md:p-10 rounded-sm shadow-gold">
+            <div
+              className="relative border-2 border-primary p-8 md:p-10 rounded-sm shadow-gold"
+              style={{
+                background: "oklch(0.14 0.03 255 / 0.92)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
               {/* Corner accents */}
               <div className="absolute -top-1 -left-1 w-5 h-5 border-t-2 border-l-2 border-primary" />
               <div className="absolute -top-1 -right-1 w-5 h-5 border-t-2 border-r-2 border-primary" />
@@ -73,9 +170,9 @@ export function PersonalPortfolio({
               <div className="flex justify-center mb-6">
                 <div className="w-28 h-28 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
-                    src="/assets/generated/sk-profile-placeholder.dim_400x400.jpg"
+                    src="/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png"
                     alt="Sarang Kumar"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               </div>
@@ -89,7 +186,7 @@ export function PersonalPortfolio({
                   Hyderabad, India
                 </p>
                 <p className="text-muted-foreground text-xs mt-1">
-                  Web Developer · Designer · Digital Solutions Expert
+                  Web Developer \u00b7 Designer \u00b7 Digital Solutions Expert
                 </p>
               </div>
 
@@ -149,7 +246,7 @@ export function PersonalPortfolio({
                   className="text-muted-foreground hover:text-foreground text-xs"
                   data-ocid="portfolio.secondary_button"
                 >
-                  ← Back
+                  \u2190 Back
                 </Button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -178,17 +275,17 @@ export function PersonalPortfolio({
                   About Me
                 </h2>
                 <p className="text-muted-foreground leading-relaxed mb-4 text-sm">
-                  I’m a passionate Web Designer & Developer based in Hyderabad
-                  with 3+ years of experience delivering high-performance
-                  digital solutions for businesses across India. I specialize in
-                  React, Next.js, and WordPress development with a keen eye for
-                  UI/UX design.
+                  I\u2019m a passionate Web Designer & Developer based in
+                  Hyderabad with 3+ years of experience delivering
+                  high-performance digital solutions for businesses across
+                  India. I specialize in React, Next.js, and WordPress
+                  development with a keen eye for UI/UX design.
                 </p>
                 <p className="text-muted-foreground leading-relaxed text-sm">
-                  Through SK Web Solutions, I’ve helped 40+ clients transform
-                  their digital presence — from startups launching their first
-                  website to established businesses scaling their e-commerce
-                  operations.
+                  Through SK Web Solutions, I\u2019ve helped 40+ clients
+                  transform their digital presence \u2014 from startups
+                  launching their first website to established businesses
+                  scaling their e-commerce operations.
                 </p>
                 <div className="flex gap-3 mt-6">
                   <a
@@ -214,9 +311,9 @@ export function PersonalPortfolio({
               <div className="flex justify-center">
                 <div className="w-48 h-48 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
-                    src="/assets/generated/sk-profile-placeholder.dim_400x400.jpg"
+                    src="/assets/img_20260329_205345-019d3f24-afe3-739e-9cda-957beb0b02fd.png"
                     alt="Sarang Kumar"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               </div>
@@ -270,8 +367,8 @@ export function PersonalPortfolio({
                     SK Website Designer & Developer
                   </h3>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Hyderabad’s trusted web development partner — delivering
-                    premium digital solutions since 2022.
+                    Hyderabad\u2019s trusted web development partner \u2014
+                    delivering premium digital solutions since 2022.
                   </p>
                 </div>
                 <Button
@@ -289,7 +386,7 @@ export function PersonalPortfolio({
           <footer className="border-t border-border/60 py-6">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Sarang Kumar ·{" "}
+                \u00a9 {new Date().getFullYear()} Sarang Kumar \u00b7{" "}
                 <a
                   href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
                   target="_blank"

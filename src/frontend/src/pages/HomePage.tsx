@@ -114,6 +114,100 @@ const TESTIMONIALS = [
   },
 ];
 
+interface HeroOrb {
+  id: string;
+  top: string;
+  left: string;
+  width: number;
+  height: number;
+  duration: string;
+  delay: string;
+  animName: string;
+}
+
+const HERO_ORBS: HeroOrb[] = [
+  {
+    id: "h-orb-1",
+    top: "10%",
+    left: "5%",
+    width: 80,
+    height: 80,
+    duration: "12s",
+    delay: "0s",
+    animName: "float-orb",
+  },
+  {
+    id: "h-orb-2",
+    top: "60%",
+    left: "2%",
+    width: 50,
+    height: 50,
+    duration: "17s",
+    delay: "2s",
+    animName: "float-orb-2",
+  },
+  {
+    id: "h-orb-3",
+    top: "20%",
+    left: "75%",
+    width: 120,
+    height: 120,
+    duration: "20s",
+    delay: "1s",
+    animName: "float-orb",
+  },
+  {
+    id: "h-orb-4",
+    top: "75%",
+    left: "85%",
+    width: 60,
+    height: 60,
+    duration: "14s",
+    delay: "4s",
+    animName: "float-orb-2",
+  },
+  {
+    id: "h-orb-5",
+    top: "45%",
+    left: "50%",
+    width: 40,
+    height: 40,
+    duration: "9s",
+    delay: "0.5s",
+    animName: "float-orb",
+  },
+  {
+    id: "h-orb-6",
+    top: "85%",
+    left: "40%",
+    width: 90,
+    height: 90,
+    duration: "16s",
+    delay: "3s",
+    animName: "float-orb-2",
+  },
+  {
+    id: "h-orb-7",
+    top: "5%",
+    left: "40%",
+    width: 30,
+    height: 30,
+    duration: "11s",
+    delay: "6s",
+    animName: "float-orb",
+  },
+  {
+    id: "h-orb-8",
+    top: "35%",
+    left: "90%",
+    width: 70,
+    height: 70,
+    duration: "18s",
+    delay: "2.5s",
+    animName: "float-orb-2",
+  },
+];
+
 export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <main>
@@ -128,7 +222,28 @@ export function HomePage({ onNavigate }: HomePageProps) {
         }}
         data-ocid="home.section"
       >
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/80 to-background/50" />
+
+        {/* Animated gold orbs */}
+        {HERO_ORBS.map((orb) => (
+          <div
+            key={orb.id}
+            style={{
+              position: "absolute",
+              top: orb.top,
+              left: orb.left,
+              width: orb.width,
+              height: orb.height,
+              borderRadius: "50%",
+              pointerEvents: "none",
+              background:
+                "radial-gradient(circle, oklch(0.78 0.14 85 / 0.3), transparent 70%)",
+              animation: `${orb.animName} ${orb.duration} ease-in-out ${orb.delay} infinite`,
+            }}
+          />
+        ))}
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 z-10">
           <div className="max-w-3xl">
             <Badge className="mb-4 border-primary/40 text-primary bg-primary/10 px-3 py-1">
@@ -142,8 +257,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
               for Modern Businesses
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">
-              From stunning websites to intelligent business tools — we build
-              digital experiences that convert visitors into loyal customers.
+              From stunning websites to intelligent business tools \u2014 we
+              build digital experiences that convert visitors into loyal
+              customers.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button
