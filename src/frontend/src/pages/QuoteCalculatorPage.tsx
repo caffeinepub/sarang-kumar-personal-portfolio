@@ -94,7 +94,7 @@ export function QuoteCalculatorPage() {
     } catch (err) {
       console.error("Quote submission error:", err);
       toast.error(
-        "Submission failed. Please try the Contact page or email sarangkumar408@gmail.com",
+        "Submission failed. Please try the Contact page or email mrsergio569@gmail.com",
       );
     } finally {
       setSubmitting(false);
@@ -306,7 +306,7 @@ export function QuoteCalculatorPage() {
                 onChange={(e) =>
                   setContactInfo((p) => ({ ...p, name: e.target.value }))
                 }
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-4 h-12 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 data-ocid="quote.input"
               />
               <input
@@ -316,7 +316,7 @@ export function QuoteCalculatorPage() {
                 onChange={(e) =>
                   setContactInfo((p) => ({ ...p, email: e.target.value }))
                 }
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-4 h-12 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 data-ocid="quote.input"
               />
               <input
@@ -326,7 +326,7 @@ export function QuoteCalculatorPage() {
                 onChange={(e) =>
                   setContactInfo((p) => ({ ...p, phone: e.target.value }))
                 }
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full px-4 h-12 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 data-ocid="quote.input"
               />
             </div>

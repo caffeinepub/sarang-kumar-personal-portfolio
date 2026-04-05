@@ -44,7 +44,7 @@ export function SKAssistant() {
     price:
       "Pricing starts at ₹15,000 (Starter: 5-page website), ₹35,000 (Professional: full-featured), ₹75,000+ (Enterprise: custom apps). Use our Quote Calculator for an exact estimate!",
     contact:
-      "Contact Sarang Kumar at sarangkumar408@gmail.com. LinkedIn: linkedin.com/in/sarang-kumar-854214257. Based in Hyderabad, India.",
+      "Contact Sarang Kumar at mrsergio569@gmail.com. LinkedIn: linkedin.com/in/sarang-kumar-854214257. Based in Hyderabad, India.",
     tech: "Our tech stack: React, Next.js, WordPress, Tailwind CSS, Node.js, Tableau, MongoDB, Stripe, Vue.js, Firebase. We pick the right tool for every project.",
     timeline:
       "Timelines: 1-2 weeks (Starter), 3-4 weeks (Professional), 6-8 weeks (Enterprise). Complex projects may vary.",
@@ -149,7 +149,7 @@ export function SKAssistant() {
         {
           id: Date.now() + 1,
           role: "assistant",
-          text: "Sorry, I had trouble with that. Try again or contact us directly at sarangkumar408@gmail.com.",
+          text: "Sorry, I had trouble with that. Try again or contact us directly at mrsergio569@gmail.com.",
         },
       ]);
     } finally {
@@ -162,7 +162,7 @@ export function SKAssistant() {
       {/* Chat Panel */}
       {open && (
         <div
-          className="fixed bottom-24 right-4 md:right-6 w-80 md:w-96 rounded-xl overflow-hidden z-50"
+          className="fixed bottom-[88px] md:bottom-6 right-4 md:right-6 w-[calc(100vw-32px)] max-w-[384px] md:w-96 rounded-xl overflow-hidden z-50"
           style={{
             boxShadow:
               "0 20px 60px rgba(0,0,0,0.5), 0 0 30px oklch(0.78 0.14 85 / 0.15)",
@@ -195,7 +195,7 @@ export function SKAssistant() {
               </Button>
             </div>
             {/* Messages */}
-            <div className="h-72 overflow-y-auto p-3 space-y-3 bg-background">
+            <div className="max-h-[65vh] md:max-h-72 overflow-y-auto p-3 space-y-3 bg-background">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -271,7 +271,7 @@ export function SKAssistant() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-gold animate-pulse-gold hover:scale-110 transition-transform duration-200"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full gold-gradient flex items-center justify-center shadow-gold animate-pulse-gold hover:scale-110 transition-transform duration-200"
         data-ocid="assistant.open_modal_button"
         aria-label="Open SK Assistant"
       >

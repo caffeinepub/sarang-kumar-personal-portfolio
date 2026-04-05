@@ -116,12 +116,12 @@ actor {
 
     // Contact
     if (containsKeyword(q, "contact") or containsKeyword(q, "reach") or containsKeyword(q, "email") or containsKeyword(q, "phone") or containsKeyword(q, "whatsapp") or containsKeyword(q, "call")) {
-      return "You can reach Sarang Kumar through:\n\n• Email: sarangkumar408@gmail.com\n• LinkedIn: linkedin.com/in/sarang-kumar-854214257\n• Contact Form: Use the Contact page on this website to submit your requirements\n\nSarang typically responds within 24 hours. For urgent queries, mention it in your message!"
+      return "You can reach Sarang Kumar through:\n\n• Email: mrsergio569@gmail.com\n• LinkedIn: linkedin.com/in/sarang-kumar-854214257\n• Contact Form: Use the Contact page on this website to submit your requirements\n\nSarang typically responds within 24 hours. For urgent queries, mention it in your message!"
     };
 
     // Inquiry / Hire
     if (containsKeyword(q, "hire") or containsKeyword(q, "enquir") or containsKeyword(q, "inquir") or containsKeyword(q, "book") or containsKeyword(q, "order") or containsKeyword(q, "get started") or containsKeyword(q, "start a project")) {
-      return "Great! Here's how to get started:\n\n1. Go to the Contact page on this website\n2. Fill in your name, email, and project requirements\n3. Select the service type\n4. Submit the inquiry form\n\nSarang will review your requirements and get back to you within 24 hours with a detailed proposal and timeline. You can also email directly at sarangkumar408@gmail.com!"
+      return "Great! Here's how to get started:\n\n1. Go to the Contact page on this website\n2. Fill in your name, email, and project requirements\n3. Select the service type\n4. Submit the inquiry form\n\nSarang will review your requirements and get back to you within 24 hours with a detailed proposal and timeline. You can also email directly at mrsergio569@gmail.com!"
     };
 
     // Marketplace / Listings
@@ -180,7 +180,7 @@ actor {
     };
 
     // Default fallback
-    "Thank you for your question! I may not have a specific answer for that, but I'd be happy to help you further. Please contact Sarang directly:\n\n• Email: sarangkumar408@gmail.com\n• LinkedIn: linkedin.com/in/sarang-kumar-854214257\n• Or use the Contact page to submit your inquiry\n\nYou can also ask me about: services, pricing, website types, timelines, technology, SEO, support, or anything about Sarang Kumar!"
+    "Thank you for your question! I may not have a specific answer for that, but I'd be happy to help you further. Please contact Sarang directly:\n\n• Email: mrsergio569@gmail.com\n• LinkedIn: linkedin.com/in/sarang-kumar-854214257\n• Or use the Contact page to submit your inquiry\n\nYou can also ask me about: services, pricing, website types, timelines, technology, SEO, support, or anything about Sarang Kumar!"
   };
 
   // ── Listings ───────────────────────────────────────────────────────

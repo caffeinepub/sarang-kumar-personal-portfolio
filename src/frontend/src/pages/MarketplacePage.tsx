@@ -172,7 +172,7 @@ export function MarketplacePage({ onNavigate }: MarketplacePageProps) {
       </div>
 
       {/* Category Pills */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2 flex-nowrap">
         {CATEGORIES.map((cat) => (
           <button
             type="button"

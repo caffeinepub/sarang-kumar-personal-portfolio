@@ -108,7 +108,7 @@ export function Navbar({ currentPage, onNavigate }: NavbarProps) {
                   onNavigate(link.id);
                   setMobileOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors min-h-[44px] flex items-center ${
                   currentPage === link.id
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground"

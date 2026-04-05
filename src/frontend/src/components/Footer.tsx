@@ -84,7 +84,7 @@ export function Footer({ onAdminAccess }: FooterProps) {
               Contact
             </h4>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p>sarangkumar408@gmail.com</p>
+              <p>mrsergio569@gmail.com</p>
               <p>Hyderabad, Telangana, India</p>
               <p className="mt-2">Mon–Fri, 9AM–6PM IST</p>
             </div>
@@ -103,13 +103,14 @@ export function Footer({ onAdminAccess }: FooterProps) {
               Built with ❤️ using caffeine.ai
             </a>
           </p>
+          {/* Admin Access — subtle but visible, for Sarang only */}
           <button
             type="button"
             onClick={onAdminAccess}
-            className="text-xs text-muted-foreground/30 hover:text-muted-foreground transition-colors"
-            data-ocid="footer.link"
+            className="text-xs text-muted-foreground/60 hover:text-primary border border-border/40 hover:border-primary/50 px-3 py-1 rounded-full transition-all duration-200 min-h-[36px] min-w-[120px]"
+            data-ocid="footer.admin_access"
           >
-            Admin Access
+            🔐 Admin Access
           </button>
         </div>
       </div>

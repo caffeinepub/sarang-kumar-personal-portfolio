@@ -250,7 +250,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <MapPin className="h-3 w-3 mr-1" />
               Serving Hyderabad & Beyond
             </Badge>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+            <h1 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
               Crafting <span className="gold-text">High-Performance</span>{" "}
               Digital Solutions
               <br />
@@ -261,7 +261,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               build digital experiences that convert visitors into loyal
               customers.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 size="lg"
                 className="btn-gold gap-2 text-base px-8"

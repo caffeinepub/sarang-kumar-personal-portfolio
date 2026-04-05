@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useDarkMode } from "./components/DarkModeToggle";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Footer } from "./components/Footer";
+import { MobileBottomNav } from "./components/MobileBottomNav";
 import { Navbar } from "./components/Navbar";
 import { SKAssistant } from "./components/SKAssistant";
 import { useActor } from "./hooks/useActor";
@@ -215,7 +216,7 @@ function App() {
               setSite("business");
               setPage("home");
             }}
-            className={`px-5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+            className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
               site === "business"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent text-muted-foreground hover:text-foreground"
@@ -227,7 +228,7 @@ function App() {
           <button
             type="button"
             onClick={() => setSite("portfolio")}
-            className={`px-5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+            className={`px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
               site === "portfolio"
                 ? "bg-primary text-primary-foreground"
                 : "bg-transparent text-muted-foreground hover:text-foreground"
@@ -243,7 +244,7 @@ function App() {
       {site === "business" && (
         <>
           <Navbar currentPage={page} onNavigate={navigate} />
-          <div className="flex-1">
+          <div className="flex-1 pb-16 md:pb-0">
             {page === "home" && <HomePage onNavigate={handleNavigate as any} />}
             {page === "marketplace" && (
               <MarketplacePage onNavigate={handleNavigate as any} />
@@ -257,6 +258,7 @@ function App() {
             {page === "quote" && <QuoteCalculatorPage />}
             {page === "contact" && <ContactPage />}
           </div>
+          <MobileBottomNav currentPage={page} onNavigate={navigate} />
           <Footer onAdminAccess={() => setAdminModalOpen(true)} />
         </>
       )}

@@ -101,7 +101,7 @@ export function ContactPage() {
     } catch (err) {
       console.error("Contact form submission error:", err);
       toast.error(
-        "Failed to send message. Please email us directly at sarangkumar408@gmail.com",
+        "Failed to send message. Please email us directly at mrsergio569@gmail.com",
       );
     } finally {
       setSubmitting(false);
@@ -167,13 +167,13 @@ export function ContactPage() {
             </h2>
             <div className="space-y-4">
               <a
-                href="mailto:sarangkumar408@gmail.com"
+                href="mailto:mrsergio569@gmail.com"
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Mail className="h-4 w-4 text-primary" />
                 </div>
-                <span>sarangkumar408@gmail.com</span>
+                <span>mrsergio569@gmail.com</span>
               </a>
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -223,7 +223,7 @@ export function ContactPage() {
                 onChange={(e) =>
                   setForm((p) => ({ ...p, name: e.target.value }))
                 }
-                className="bg-secondary border-border"
+                className="bg-secondary border-border h-12 md:h-10"
                 placeholder="Rajesh Sharma"
                 data-ocid="contact.input"
               />
@@ -247,7 +247,7 @@ export function ContactPage() {
                 onChange={(e) =>
                   setForm((p) => ({ ...p, email: e.target.value }))
                 }
-                className="bg-secondary border-border"
+                className="bg-secondary border-border h-12 md:h-10"
                 placeholder="rajesh@company.com"
                 data-ocid="contact.input"
               />
@@ -274,7 +274,7 @@ export function ContactPage() {
                 onChange={(e) =>
                   setForm((p) => ({ ...p, phone: e.target.value }))
                 }
-                className="bg-secondary border-border"
+                className="bg-secondary border-border h-12 md:h-10"
                 placeholder="+91 98765 43210"
                 data-ocid="contact.input"
               />
@@ -288,7 +288,7 @@ export function ContactPage() {
                 }
               >
                 <SelectTrigger
-                  className="bg-secondary border-border"
+                  className="bg-secondary border-border h-12 md:h-10"
                   data-ocid="contact.select"
                 >
                   <SelectValue placeholder="Select a service" />

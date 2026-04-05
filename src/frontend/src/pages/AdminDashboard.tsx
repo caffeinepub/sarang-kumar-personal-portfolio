@@ -41,6 +41,8 @@ import {
   Activity,
   BarChart3,
   LogOut,
+  Mail,
+  MessageCircle,
   MessageSquare,
   Package,
   Pencil,
@@ -430,6 +432,7 @@ export function AdminDashboard() {
                         <div className="font-semibold">{inq.clientName}</div>
                         <div className="text-sm text-muted-foreground">
                           {inq.email} · {inq.serviceType}
+                          {inq.phone && <span> · 📱 {inq.phone}</span>}
                         </div>
                       </div>
                       <Badge
@@ -478,6 +481,46 @@ export function AdminDashboard() {
                         }
                         data-ocid="admin.input"
                       />
+                    </div>
+
+                    {/* Reply buttons */}
+                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/40">
+                      {inq.phone && (
+                        <a
+                          href={`https://wa.me/91${inq.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                            `Hello ${inq.clientName}, thank you for reaching out to SK Web Solutions! We received your inquiry about ${inq.serviceType}. We'll get back to you shortly. - SK Web Solutions Team`,
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-ocid="admin.secondary_button"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 text-green-500 border-green-500/30 hover:bg-green-500/10"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            WhatsApp Reply
+                          </Button>
+                        </a>
+                      )}
+                      <a
+                        href={`mailto:${inq.email}?subject=${encodeURIComponent(
+                          "Re: Your Inquiry - SK Web Solutions",
+                        )}&body=${encodeURIComponent(
+                          `Hello ${inq.clientName},\n\nThank you for reaching out to SK Web Solutions!\n\nWe received your inquiry about ${inq.serviceType} and wanted to follow up.\n\n${inq.message ? `Your message: "${inq.message}"\n\n` : ""}We'd love to discuss your requirements further. Please feel free to reply to this email or call us.\n\nBest regards,\nSarang Kumar\nSK Web Solutions\nHyderabad, India\n📧 mrsergio569@gmail.com`,
+                        )}`}
+                        data-ocid="admin.secondary_button"
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs gap-1.5 text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+                        >
+                          <Mail className="w-3 h-3" />
+                          Email Reply
+                        </Button>
+                      </a>
                     </div>
                   </div>
                 ))
