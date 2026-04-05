@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
-import { CheckCircle, Linkedin, Loader2, Mail, MapPin } from "lucide-react";
+import { CheckCircle, Loader2, Mail, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -174,18 +174,6 @@ export function ContactPage() {
                 </div>
                 <span>Hyderabad, Telangana, India</span>
               </div>
-              <a
-                href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
-                data-ocid="contact.link"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Linkedin className="h-4 w-4 text-primary" />
-                </div>
-                <span>LinkedIn Profile</span>
-              </a>
             </div>
           </div>
           <div className="p-6 rounded-xl bg-primary/5 border border-primary/15">
@@ -193,7 +181,7 @@ export function ContactPage() {
             <p className="text-muted-foreground text-sm">
               We respond within{" "}
               <strong className="text-primary">24 hours</strong> on business
-              days. Urgent? Send a WhatsApp or LinkedIn message.
+              days. Urgent? Send a WhatsApp message.
             </p>
           </div>
         </aside>

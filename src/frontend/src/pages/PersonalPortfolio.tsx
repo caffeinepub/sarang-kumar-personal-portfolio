@@ -6,7 +6,6 @@ import {
   Database,
   ExternalLink,
   Globe,
-  Linkedin,
   TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
@@ -199,15 +198,6 @@ export function PersonalPortfolio({
               {/* Social Links */}
               <div className="flex justify-center gap-3 mb-7">
                 <a
-                  href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 rounded border border-primary/40 text-primary text-xs hover:bg-primary/10 transition-colors"
-                  data-ocid="portfolio.link"
-                >
-                  <Linkedin className="h-3.5 w-3.5" /> LinkedIn
-                </a>
-                <a
                   href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -288,15 +278,6 @@ export function PersonalPortfolio({
                   operations.
                 </p>
                 <div className="flex gap-3 mt-6">
-                  <a
-                    href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                    data-ocid="portfolio.link"
-                  >
-                    <Linkedin className="h-4 w-4" /> LinkedIn
-                  </a>
                   <a
                     href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
                     target="_blank"
@@ -397,17 +378,7 @@ export function PersonalPortfolio({
                   Built with caffeine.ai
                 </a>
               </p>
-              <div className="flex gap-3">
-                <a
-                  href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary"
-                  data-ocid="portfolio.link"
-                >
-                  <Linkedin className="h-4 w-4" />
-                </a>
-              </div>
+              <div className="flex gap-3" />
             </div>
           </footer>
         </div>

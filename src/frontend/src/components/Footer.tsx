@@ -1,10 +1,4 @@
-import {
-  CheckCircle,
-  ExternalLink,
-  Linkedin,
-  Lock,
-  Shield,
-} from "lucide-react";
+import { CheckCircle, ExternalLink, Lock, Shield } from "lucide-react";
 
 interface FooterProps {
   onAdminAccess: () => void;
@@ -35,16 +29,6 @@ export function Footer({ onAdminAccess }: FooterProps) {
               Based in Hyderabad, India.
             </p>
             <div className="flex gap-3 mt-4">
-              <a
-                href="https://www.linkedin.com/in/sarang-kumar-854214257/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
-                aria-label="LinkedIn"
-                data-ocid="footer.link"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
               <a
                 href="https://sarangkumarnetwork.my.canva.site/sarang-productions"
                 target="_blank"

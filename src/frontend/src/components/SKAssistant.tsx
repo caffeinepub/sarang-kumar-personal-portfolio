@@ -44,7 +44,7 @@ export function SKAssistant() {
     price:
       "Pricing starts at ₹15,000 (Starter: 5-page website), ₹35,000 (Professional: full-featured), ₹75,000+ (Enterprise: custom apps). Use our Quote Calculator for an exact estimate!",
     contact:
-      "Contact Sarang Kumar at mrsergio569@gmail.com. LinkedIn: linkedin.com/in/sarang-kumar-854214257. Based in Hyderabad, India.",
+      "Contact Sarang Kumar at mrsergio569@gmail.com. Based in Hyderabad, India.",
     tech: "Our tech stack: React, Next.js, WordPress, Tailwind CSS, Node.js, Tableau, MongoDB, Stripe, Vue.js, Firebase. We pick the right tool for every project.",
     timeline:
       "Timelines: 1-2 weeks (Starter), 3-4 weeks (Professional), 6-8 weeks (Enterprise). Complex projects may vary.",

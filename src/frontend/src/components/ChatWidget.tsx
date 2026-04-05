@@ -34,7 +34,7 @@ const KB: Record<string, string> = {
   pricing:
     "Our pricing packages:\n\n\ud83e\udd49 **Starter** \u2014 \u20b915,000 | Basic 5-page site, responsive design, contact form\n\ud83e\udd48 **Professional** \u2014 \u20b935,000 | Up to 15 pages, CMS, SEO setup, animations\n\ud83e\udd47 **Business** \u2014 \u20b975,000 | Full custom site, e-commerce, admin dashboard, integrations\n\ud83d\udc8e **Enterprise** \u2014 Custom quote | Complex portals, automation, API integrations\n\nAll packages include 3 months of support.",
   contact:
-    "You can reach Sarang Kumar at:\n\ud83d\udce7 **Email:** mrsergio569@gmail.com\n\ud83d\udd17 **LinkedIn:** linkedin.com/in/sarang-kumar-854214257\n\ud83c\udf10 **Website:** SK Web Solutions (you're here!)\n\nFill out the Contact form on our site for a free consultation!",
+    "You can reach Sarang Kumar at:\n\ud83d\udce7 **Email:** mrsergio569@gmail.com\n\ud83c\udf10 **Website:** SK Web Solutions (you're here!)\n\nFill out the Contact form on our site for a free consultation!",
   websiteTypes:
     "We build all types of websites:\n\n\ud83d\uded2 **E-Commerce** \u2014 Online stores with payment gateways\n\ud83c\udfe2 **Corporate** \u2014 Professional business websites\n\ud83d\udcf0 **Blogs & Portfolios** \u2014 Personal branding sites\n\ud83c\udfe5 **Healthcare Portals** \u2014 Patient management systems\n\ud83c\udf93 **EdTech Platforms** \u2014 LMS and course delivery\n\ud83c\udf55 **Restaurant/Food** \u2014 Menu, ordering, reservations\n\ud83d\udcca **Dashboards** \u2014 Admin panels and analytics",
   about:
