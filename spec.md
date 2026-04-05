@@ -1,51 +1,40 @@
-# SK Web Solutions — Mobile-First Optimization
+# SK Web Solutions – Admin Dashboard Redesign
 
 ## Current State
-The site is a dual-view React SPA (SK Web Solutions + Personal Portfolio) with a sticky navbar, site switcher, footer, and a floating SK Assistant. Most layout uses Tailwind's responsive prefixes (sm:, md:, lg:) but several areas still have usability issues on small screens:
-- Navbar has a hamburger menu but no mobile bottom tab bar for faster navigation
-- Hero section typography and button sizing are desktop-optimized
-- Site switcher bar is small and hard to tap on mobile
-- Category pills in the Marketplace overflow horizontally without scrolling hints
-- Services grid collapses to 1 column but cards feel cramped with px-4 padding
-- Footer stacks correctly but Admin Access button is tiny on mobile
-- Quote Calculator and Contact forms need larger input tap targets
-- SK Assistant chat bubble can overlap important content on small screens
-- Overall touch targets below 44px minimum in several places
+The admin dashboard (`src/frontend/src/pages/AdminDashboard.tsx`) is a tab-based layout with 6 tabs: Overview, Listings, Packages, Inquiries, Activity, Users. The Overview tab shows 4 plain KPI stat cards and a single activity events count. There are no charts, no visual graphs, and no data visualizations. The Activity tab has a raw log table. The design is functional but not visually insightful or easy to scan at a glance.
 
 ## Requested Changes (Diff)
 
 ### Add
-- A fixed bottom navigation bar for mobile (home, marketplace, services, quote, contact) — visible only on small screens, hidden on md+
-- Proper touch target sizes (min 44×44px) on all interactive elements
-- Horizontal scroll snap for category pills in MarketplacePage on mobile
-- Mobile-optimized padding and spacing (less wasted whitespace, tighter sections)
-- Smooth scroll-to-top on page navigation
-- Sticky bottom CTA bar on the hero section for mobile ("Get a Quote" floating bar)
-- `safe-area-inset` padding support for phones with home bar (iOS notch handling)
+- **Visual KPI cards** in Overview: Total Visitors, Total Inquiries, Quote Submissions, Active Listings — with trend indicators and icons
+- **Bar chart** (monthly inquiries) using shadcn/recharts Chart component already in the UI library
+- **Line chart** (visitor trends over time) using shadcn/recharts Chart component
+- **Donut/pie chart** — service type breakdown (Web Dev, Interior Design, E-commerce, etc.) from inquiry data
+- **Recent Inquiries mini-panel** in Overview (last 5, with status badges and reply buttons)
+- **Activity feed timeline** in Overview — last 10 events in a vertical timeline with icons per event type (login, visit, search, inquiry)
+- **Top Search Terms bar** in Overview showing search terms with visual progress bars
+- **Summary stats row** at top of each tab for context (e.g., Inquiries tab shows "X new this week")
 
 ### Modify
-- Navbar: on mobile, simplify to logo + dark mode toggle + hamburger only; remove "Get a Quote" button (moved to bottom nav)
-- Site switcher: increase pill height and font size on mobile for easier tapping
-- Hero section: reduce heading size to text-3xl on mobile, improve button layout (stack vertically on small screens)
-- MarketplacePage category pills: allow horizontal scroll on mobile (`overflow-x-auto scrollbar-hide flex-nowrap`)
-- ServicesPage: ensure cards don't overflow on very small (320px) screens
-- ContactPage and QuoteCalculatorPage: increase input height to min h-12 on mobile, larger label text
-- Footer: make Admin Access button slightly larger tap target on mobile
-- SKAssistant: ensure chat panel doesn't overflow the viewport on small screens; limit height to 70vh with scroll
-- PersonalPortfolio: ensure profile photo and intro layout are clean on mobile
-- Main content area: add `pb-20 md:pb-0` to account for fixed bottom nav on mobile
+- **Overview tab** — completely rebuild into a rich dashboard layout:
+  - Row 1: 4 KPI stat cards with icons and color accents
+  - Row 2: Bar chart (inquiries by month) + Donut chart (service breakdown)
+  - Row 3: Line chart (visitor trends) spanning full width
+  - Row 4: Recent inquiries (last 5) + Activity feed (last 10) side by side
+  - Row 5: Top search terms with progress bars
+- **Activity tab** — add visual timeline on left alongside the raw table, event type color-coded icons
+- **Inquiries tab** — add a summary banner at the top (total, new, in-progress, completed counts)
 
 ### Remove
-- No features removed
+- Nothing removed — all existing functionality (CRUD for listings, inquiry status updates, reply buttons) stays intact
 
 ## Implementation Plan
-1. Update `Navbar.tsx` — simplify mobile header, remove Get a Quote CTA (handled by bottom nav)
-2. Create `MobileBottomNav.tsx` — fixed bottom tab bar with 5 nav items, gold active state, safe-area inset support
-3. Update `App.tsx` — render `<MobileBottomNav>` inside business site view, add `pb-20 md:pb-0` to content wrapper
-4. Update `App.tsx` switcher bar — larger tap targets (py-3 text-sm on mobile)
-5. Update `HomePage.tsx` — mobile hero typography, stacked buttons, mobile padding
-6. Update `MarketplacePage.tsx` — horizontal scroll for category pills
-7. Update `ContactPage.tsx` and `QuoteCalculatorPage.tsx` — larger input tap targets
-8. Update `SKAssistant.tsx` — constrain chat panel height on mobile, add overflow scroll
-9. Update `Footer.tsx` — larger admin access tap target
-10. Update `index.css` — add scrollbar-hide utility, safe-area-inset padding helpers
+1. Rebuild the Overview tab in `AdminDashboard.tsx` with the rich multi-section layout described above
+2. Use the existing `chart.tsx` shadcn component (which wraps recharts) for bar, line, and donut charts
+3. Derive chart data from existing query results: inquiries → monthly bar chart, activity log → visitor line, inquiry service types → donut
+4. Add a `RecentInquiriesPanel` inline component rendering last 5 inquiries with status and reply buttons
+5. Add `ActivityTimeline` inline component with color-coded event icons and timestamps
+6. Add `TopSearchTermsPanel` with progress bars based on max count
+7. Add summary banner to Inquiries tab showing new/in-progress/completed counts
+8. Add visual timeline view to Activity tab
+9. Validate: typecheck, lint, build

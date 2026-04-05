@@ -8,6 +8,14 @@ import type {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -16,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -40,6 +49,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   BarChart3,
+  Bell,
   LogOut,
   Mail,
   MessageCircle,
@@ -47,12 +57,27 @@ import {
   Package,
   Pencil,
   Plus,
+  Search,
   Trash2,
+  TrendingUp,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 
+// ── Color maps ──────────────────────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   "in-progress": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
@@ -63,6 +88,14 @@ const STATUS_COLORS: Record<string, string> = {
   visit: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
 };
 
+const ACTIVITY_DOT: Record<string, string> = {
+  login: "bg-primary",
+  visit: "bg-cyan-400",
+  search: "bg-purple-400",
+  inquiry: "bg-orange-400",
+};
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
 function formatTimestamp(ts: bigint): string {
   const ms = Number(ts / 1_000_000n);
   return new Date(ms).toLocaleString("en-IN", {
@@ -71,6 +104,497 @@ function formatTimestamp(ts: bigint): string {
   });
 }
 
+function relativeTime(ts: bigint): string {
+  const ms = Number(ts / 1_000_000n);
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+function dateLabel(ts: bigint): string {
+  const ms = Number(ts / 1_000_000n);
+  return new Date(ms).toLocaleDateString("en-IN", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// ── Mock data (shown when real data is empty) ────────────────────────────────
+const MOCK_SERVICE_DATA = [
+  { type: "Web Design", count: 8 },
+  { type: "E-commerce", count: 5 },
+  { type: "Interior", count: 4 },
+  { type: "SEO", count: 3 },
+  { type: "Branding", count: 2 },
+];
+
+const MOCK_STATUS_DATA = [
+  { status: "new", count: 6, fill: "oklch(0.6 0.12 200)" },
+  { status: "in-progress", count: 3, fill: "oklch(0.75 0.15 85)" },
+  { status: "completed", count: 4, fill: "oklch(0.65 0.14 160)" },
+];
+
+function buildMockActivityDays() {
+  const days: { date: string; events: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({
+      date: d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+      events: Math.floor(Math.random() * 18) + 2,
+    });
+  }
+  return days;
+}
+
+const MOCK_ACTIVITY_DAYS = buildMockActivityDays();
+
+// ── KPI Card ─────────────────────────────────────────────────────────────────
+function KpiCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: string;
+}) {
+  return (
+    <div
+      className={`rounded-xl bg-card border p-5 flex items-start gap-4 ${accent}`}
+    >
+      <div className={`p-2.5 rounded-lg ${accent.replace("border", "bg")}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-muted-foreground text-xs mb-0.5 truncate">{label}</p>
+        <p className="font-display text-3xl font-bold gold-text">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Overview Tab ────────────────────────────────────────────────────────────
+function OverviewTab({
+  insights,
+  inquiries,
+  activityLog,
+  searchTerms,
+}: {
+  insights: [bigint, bigint, bigint, bigint] | null | undefined;
+  inquiries: Inquiry[] | undefined;
+  activityLog: UserActivity[] | undefined;
+  searchTerms: SearchTermCount[] | undefined;
+}) {
+  // ── Derived chart data ──────────────────────────────────────────────────
+  const serviceBarData = useMemo(() => {
+    if (!inquiries || inquiries.length === 0) return MOCK_SERVICE_DATA;
+    const counts: Record<string, number> = {};
+    for (const inq of inquiries) {
+      counts[inq.serviceType] = (counts[inq.serviceType] || 0) + 1;
+    }
+    return Object.entries(counts).map(([type, count]) => ({ type, count }));
+  }, [inquiries]);
+
+  const statusDonutData = useMemo(() => {
+    if (!inquiries || inquiries.length === 0) return MOCK_STATUS_DATA;
+    const counts: Record<string, number> = {};
+    for (const inq of inquiries) {
+      counts[inq.status] = (counts[inq.status] || 0) + 1;
+    }
+    return [
+      {
+        status: "new",
+        count: counts.new || 0,
+        fill: "oklch(0.6 0.12 200)",
+      },
+      {
+        status: "in-progress",
+        count: counts["in-progress"] || 0,
+        fill: "oklch(0.75 0.15 85)",
+      },
+      {
+        status: "completed",
+        count: counts.completed || 0,
+        fill: "oklch(0.65 0.14 160)",
+      },
+    ];
+  }, [inquiries]);
+
+  const activityLineData = useMemo(() => {
+    if (!activityLog || activityLog.length === 0) return MOCK_ACTIVITY_DAYS;
+    // Group by date (last 14 days)
+    const dateMap: Record<string, number> = {};
+    for (const ev of activityLog) {
+      const d = dateLabel(ev.timestamp);
+      dateMap[d] = (dateMap[d] || 0) + 1;
+    }
+    // Build last 14 days array
+    const days: { date: string; events: number }[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+      });
+      days.push({ date: key, events: dateMap[key] || 0 });
+    }
+    return days;
+  }, [activityLog]);
+
+  const maxSearchCount = useMemo(() => {
+    if (!searchTerms || searchTerms.length === 0) return 1;
+    return Math.max(...searchTerms.map((s) => Number(s.count)));
+  }, [searchTerms]);
+
+  // ── Chart configs ───────────────────────────────────────────────────────
+  const barConfig: ChartConfig = {
+    count: { label: "Inquiries", color: "oklch(0.78 0.14 85)" },
+  };
+
+  const lineConfig: ChartConfig = {
+    events: { label: "Events", color: "oklch(0.78 0.14 85)" },
+  };
+
+  const donutConfig: ChartConfig = {
+    new: { label: "New", color: "oklch(0.6 0.12 200)" },
+    "in-progress": { label: "In Progress", color: "oklch(0.75 0.15 85)" },
+    completed: { label: "Completed", color: "oklch(0.65 0.14 160)" },
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Row 1 — KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          label="Total Listings"
+          value={insights ? Number(insights[0]) : "—"}
+          icon={Package}
+          accent="border-blue-500/20 text-blue-400"
+        />
+        <KpiCard
+          label="Total Inquiries"
+          value={insights ? Number(insights[2]) : "—"}
+          icon={MessageSquare}
+          accent="border-primary/20 text-primary"
+        />
+        <KpiCard
+          label="New Inquiries"
+          value={insights ? Number(insights[3]) : "—"}
+          icon={Bell}
+          accent="border-orange-500/20 text-orange-400"
+        />
+        <KpiCard
+          label="Activity Events"
+          value={activityLog?.length ?? "—"}
+          icon={Activity}
+          accent="border-purple-500/20 text-purple-400"
+        />
+      </div>
+
+      {/* Row 2 — Bar + Donut */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Bar chart */}
+        <div className="rounded-xl bg-card border border-border/60 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm">Inquiries by Service Type</h3>
+          </div>
+          <ChartContainer config={barConfig} className="h-52">
+            <BarChart
+              data={serviceBarData}
+              margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
+                className="stroke-border/40"
+              />
+              <XAxis
+                dataKey="type"
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="count"
+                fill="var(--color-count)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        </div>
+
+        {/* Donut chart */}
+        <div className="rounded-xl bg-card border border-border/60 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm">Inquiry Status Breakdown</h3>
+          </div>
+          <ChartContainer config={donutConfig} className="h-52">
+            <PieChart>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent nameKey="status" hideLabel={true} />
+                }
+              />
+              <Pie
+                data={statusDonutData}
+                dataKey="count"
+                nameKey="status"
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={85}
+                paddingAngle={3}
+              >
+                {statusDonutData.map((entry) => (
+                  <Cell key={entry.status} fill={entry.fill} />
+                ))}
+              </Pie>
+              <ChartLegend
+                content={
+                  <ChartLegendContent
+                    nameKey="status"
+                    payload={statusDonutData.map((d) => ({
+                      value: d.status,
+                      color: d.fill,
+                      dataKey: d.status,
+                    }))}
+                  />
+                }
+              />
+            </PieChart>
+          </ChartContainer>
+        </div>
+      </div>
+
+      {/* Row 3 — Line chart */}
+      <div className="rounded-xl bg-card border border-border/60 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="h-4 w-4 text-primary" />
+          <h3 className="font-semibold text-sm">
+            Activity Over Time (Last 14 Days)
+          </h3>
+        </div>
+        <ChartContainer config={lineConfig} className="h-52">
+          <LineChart
+            data={activityLineData}
+            margin={{ top: 4, right: 12, left: -20, bottom: 0 }}
+          >
+            <CartesianGrid
+              vertical={false}
+              strokeDasharray="3 3"
+              className="stroke-border/40"
+            />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+              interval={1}
+            />
+            <YAxis
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line
+              type="monotone"
+              dataKey="events"
+              stroke="var(--color-events)"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "var(--color-events)" }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        </ChartContainer>
+      </div>
+
+      {/* Row 4 — Recent Inquiries + Activity Feed */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Recent Inquiries */}
+        <div className="rounded-xl bg-card border border-border/60 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm">Recent Inquiries</h3>
+          </div>
+          <div className="space-y-3">
+            {(inquiries ?? []).length === 0 ? (
+              <p
+                className="text-sm text-muted-foreground py-4 text-center"
+                data-ocid="admin.empty_state"
+              >
+                No inquiries yet
+              </p>
+            ) : (
+              (inquiries ?? []).slice(0, 5).map((inq, idx) => (
+                <div
+                  key={Number(inq.id)}
+                  className="flex items-start justify-between gap-3 p-3 rounded-lg bg-secondary/50 border border-border/40"
+                  data-ocid={`admin.item.${idx + 1}`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {inq.clientName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {inq.serviceType}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      className={`text-xs ${STATUS_COLORS[inq.status] || "bg-muted"}`}
+                    >
+                      {inq.status}
+                    </Badge>
+                    {inq.phone && (
+                      <a
+                        href={`https://wa.me/91${inq.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                          `Hello ${inq.clientName}, thank you for reaching out to SK Web Solutions! We received your inquiry about ${inq.serviceType}. - SK Web Solutions`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-green-500 hover:bg-green-500/10"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </Button>
+                      </a>
+                    )}
+                    <a
+                      href={`mailto:${inq.email}?subject=${encodeURIComponent("Re: Your Inquiry - SK Web Solutions")}`}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-blue-500 hover:bg-blue-500/10"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Activity Feed Timeline */}
+        <div className="rounded-xl bg-card border border-border/60 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm">Activity Feed</h3>
+          </div>
+          <div className="space-y-0">
+            {(activityLog ?? []).length === 0 ? (
+              <p
+                className="text-sm text-muted-foreground py-4 text-center"
+                data-ocid="admin.empty_state"
+              >
+                No activity yet
+              </p>
+            ) : (
+              <div className="relative pl-5">
+                {/* Vertical line */}
+                <div className="absolute left-1.5 top-0 bottom-0 w-px bg-border/60" />
+                <div className="space-y-3">
+                  {(activityLog ?? []).slice(0, 10).map((ev) => (
+                    <div key={Number(ev.id)} className="relative">
+                      {/* Dot */}
+                      <div
+                        className={`absolute -left-3.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-background ${
+                          ACTIVITY_DOT[ev.action] || "bg-muted-foreground"
+                        }`}
+                      />
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              className={`text-[10px] h-4 px-1.5 ${STATUS_COLORS[ev.action] || "bg-muted"}`}
+                            >
+                              {ev.action}
+                            </Badge>
+                            {ev.detail && (
+                              <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                                {ev.detail}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
+                          {relativeTime(ev.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 5 — Top Search Terms */}
+      {((searchTerms ?? []).length > 0 || true) && (
+        <div className="rounded-xl bg-card border border-border/60 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm">Top Search Terms</h3>
+          </div>
+          {(searchTerms ?? []).length === 0 ? (
+            <p
+              className="text-sm text-muted-foreground py-2"
+              data-ocid="admin.empty_state"
+            >
+              No searches recorded yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {(searchTerms ?? []).slice(0, 8).map((st, idx) => (
+                <div
+                  key={st.term}
+                  className="space-y-1"
+                  data-ocid={`admin.item.${idx + 1}`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium">{st.term}</span>
+                    <Badge className="bg-primary/10 text-primary border-primary/20 tabular-nums">
+                      {Number(st.count)}
+                    </Badge>
+                  </div>
+                  <Progress
+                    value={(Number(st.count) / maxSearchCount) * 100}
+                    className="h-1.5"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────────────────────
 export function AdminDashboard() {
   const { actor } = useActor();
   const { clear } = useInternetIdentity();
@@ -217,6 +741,17 @@ export function AdminDashboard() {
 
   const [inquiryNotes, setInquiryNotes] = useState<Record<string, string>>({});
 
+  // ---- Inquiry summary counts ----
+  const inquiryCounts = useMemo(() => {
+    const list = inquiries ?? [];
+    return {
+      total: list.length,
+      new: list.filter((i) => i.status === "new").length,
+      inProgress: list.filter((i) => i.status === "in-progress").length,
+      completed: list.filter((i) => i.status === "completed").length,
+    };
+  }, [inquiries]);
+
   return (
     <div
       className="max-w-7xl mx-auto px-4 sm:px-6 py-8"
@@ -268,47 +803,12 @@ export function AdminDashboard() {
 
         {/* Overview */}
         <TabsContent value="overview" data-ocid="admin.panel">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[
-              {
-                label: "Total Listings",
-                value: insights ? Number(insights[0]) : "—",
-              },
-              {
-                label: "Available",
-                value: insights ? Number(insights[1]) : "—",
-              },
-              {
-                label: "Total Inquiries",
-                value: insights ? Number(insights[2]) : "—",
-              },
-              {
-                label: "New Inquiries",
-                value: insights ? Number(insights[3]) : "—",
-              },
-            ].map((kpi) => (
-              <div
-                key={kpi.label}
-                className="rounded-xl bg-card border border-border/60 p-5"
-              >
-                <p className="text-muted-foreground text-xs mb-1">
-                  {kpi.label}
-                </p>
-                <p className="font-display text-3xl font-bold gold-text">
-                  {kpi.value}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-xl bg-card border border-border/60 p-5">
-            <h3 className="font-semibold mb-3">Activity Events</h3>
-            <p className="font-display text-3xl font-bold gold-text">
-              {activityLog?.length ?? "—"}
-            </p>
-            <p className="text-muted-foreground text-xs mt-1">
-              Total logged events
-            </p>
-          </div>
+          <OverviewTab
+            insights={insights as [bigint, bigint, bigint, bigint] | null}
+            inquiries={inquiries}
+            activityLog={activityLog}
+            searchTerms={searchTerms}
+          />
         </TabsContent>
 
         {/* Listings */}
@@ -352,7 +852,11 @@ export function AdminDashboard() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`text-xs ${l.status === "available" ? "bg-green-500/10 text-green-400" : "bg-muted"}`}
+                          className={`text-xs ${
+                            l.status === "available"
+                              ? "bg-green-500/10 text-green-400"
+                              : "bg-muted"
+                          }`}
                         >
                           {l.status}
                         </Badge>
@@ -408,6 +912,26 @@ export function AdminDashboard() {
 
         {/* Inquiries */}
         <TabsContent value="inquiries" data-ocid="admin.panel">
+          {/* Summary pills */}
+          <div className="flex flex-wrap gap-2 mb-5">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary border border-border/60 text-xs font-medium">
+              <span className="text-muted-foreground">Total</span>
+              <span className="ml-1 font-bold">{inquiryCounts.total}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-medium text-blue-400">
+              New
+              <span className="ml-1 font-bold">{inquiryCounts.new}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-xs font-medium text-yellow-400">
+              In Progress
+              <span className="ml-1 font-bold">{inquiryCounts.inProgress}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs font-medium text-green-400">
+              Completed
+              <span className="ml-1 font-bold">{inquiryCounts.completed}</span>
+            </div>
+          </div>
+
           <h2 className="font-semibold mb-4">Client Inquiries</h2>
           {inquiriesLoading ? (
             <Skeleton className="h-64" data-ocid="admin.loading_state" />
@@ -508,7 +1032,11 @@ export function AdminDashboard() {
                         href={`mailto:${inq.email}?subject=${encodeURIComponent(
                           "Re: Your Inquiry - SK Web Solutions",
                         )}&body=${encodeURIComponent(
-                          `Hello ${inq.clientName},\n\nThank you for reaching out to SK Web Solutions!\n\nWe received your inquiry about ${inq.serviceType} and wanted to follow up.\n\n${inq.message ? `Your message: "${inq.message}"\n\n` : ""}We'd love to discuss your requirements further. Please feel free to reply to this email or call us.\n\nBest regards,\nSarang Kumar\nSK Web Solutions\nHyderabad, India\n📧 mrsergio569@gmail.com`,
+                          `Hello ${inq.clientName},\n\nThank you for reaching out to SK Web Solutions!\n\nWe received your inquiry about ${inq.serviceType} and wanted to follow up.\n\n${
+                            inq.message
+                              ? `Your message: "${inq.message}"\n\n`
+                              : ""
+                          }We'd love to discuss your requirements further. Please feel free to reply to this email or call us.\n\nBest regards,\nSarang Kumar\nSK Web Solutions\nHyderabad, India\n📧 mrsergio569@gmail.com`,
                         )}`}
                         data-ocid="admin.secondary_button"
                       >
@@ -532,6 +1060,56 @@ export function AdminDashboard() {
         {/* Activity */}
         <TabsContent value="activity" data-ocid="admin.panel">
           <div className="grid md:grid-cols-3 gap-6">
+            {/* Visual timeline */}
+            <div>
+              <h2 className="font-semibold mb-4">Live Timeline</h2>
+              <div className="rounded-xl bg-card border border-border/60 p-4">
+                {(activityLog ?? []).length === 0 ? (
+                  <p
+                    className="text-sm text-muted-foreground py-4 text-center"
+                    data-ocid="admin.empty_state"
+                  >
+                    No activity yet.
+                  </p>
+                ) : (
+                  <div className="relative pl-5">
+                    <div className="absolute left-1.5 top-0 bottom-0 w-px bg-border/60" />
+                    <div className="space-y-4">
+                      {(activityLog ?? []).slice(0, 15).map((ev) => (
+                        <div key={Number(ev.id)} className="relative">
+                          <div
+                            className={`absolute -left-3.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-background ${
+                              ACTIVITY_DOT[ev.action] || "bg-muted-foreground"
+                            }`}
+                          />
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge
+                                className={`text-[10px] h-4 px-1.5 ${
+                                  STATUS_COLORS[ev.action] || "bg-muted"
+                                }`}
+                              >
+                                {ev.action}
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground">
+                                {relativeTime(ev.timestamp)}
+                              </span>
+                            </div>
+                            {ev.detail && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                {ev.detail}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Activity table */}
             <div className="md:col-span-2">
               <h2 className="font-semibold mb-4">Recent Activity</h2>
               <div className="rounded-xl border border-border/60 overflow-hidden">
@@ -552,7 +1130,9 @@ export function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            className={`text-xs ${STATUS_COLORS[ev.action] || "bg-muted"}`}
+                            className={`text-xs ${
+                              STATUS_COLORS[ev.action] || "bg-muted"
+                            }`}
                           >
                             {ev.action}
                           </Badge>
@@ -579,30 +1159,32 @@ export function AdminDashboard() {
                   </TableBody>
                 </Table>
               </div>
-            </div>
-            <div>
-              <h2 className="font-semibold mb-4">Top Searches</h2>
-              <div className="space-y-2">
-                {(searchTerms ?? []).slice(0, 10).map((st, idx) => (
-                  <div
-                    key={st.term}
-                    className="flex items-center justify-between p-3 rounded-lg bg-card border border-border/60"
-                    data-ocid={`admin.item.${idx + 1}`}
-                  >
-                    <span className="text-sm font-medium">{st.term}</span>
-                    <Badge className="bg-primary/10 text-primary border-primary/20">
-                      {Number(st.count)}
-                    </Badge>
-                  </div>
-                ))}
-                {(searchTerms ?? []).length === 0 && (
-                  <div
-                    className="text-sm text-muted-foreground py-4 text-center"
-                    data-ocid="admin.empty_state"
-                  >
-                    No searches yet.
-                  </div>
-                )}
+
+              {/* Top searches in activity tab */}
+              <div className="mt-6">
+                <h3 className="font-semibold text-sm mb-3">Top Searches</h3>
+                <div className="space-y-2">
+                  {(searchTerms ?? []).slice(0, 10).map((st, idx) => (
+                    <div
+                      key={st.term}
+                      className="flex items-center justify-between p-3 rounded-lg bg-card border border-border/60"
+                      data-ocid={`admin.item.${idx + 1}`}
+                    >
+                      <span className="text-sm font-medium">{st.term}</span>
+                      <Badge className="bg-primary/10 text-primary border-primary/20">
+                        {Number(st.count)}
+                      </Badge>
+                    </div>
+                  ))}
+                  {(searchTerms ?? []).length === 0 && (
+                    <div
+                      className="text-sm text-muted-foreground py-4 text-center"
+                      data-ocid="admin.empty_state"
+                    >
+                      No searches yet.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
