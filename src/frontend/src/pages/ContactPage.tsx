@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
-import {
-  CheckCircle,
-  Linkedin,
-  Loader2,
-  Mail,
-  MapPin,
-  Phone,
-} from "lucide-react";
+import { CheckCircle, Linkedin, Loader2, Mail, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -59,7 +52,7 @@ export function ContactPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   function validate(): boolean {
     const e: Errors = {};
@@ -340,14 +333,10 @@ export function ContactPage() {
             type="submit"
             size="lg"
             className="w-full btn-gold text-base"
-            disabled={submitting || isFetching}
+            disabled={submitting}
             data-ocid="contact.submit_button"
           >
-            {isFetching ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Connecting...
-              </>
-            ) : submitting ? (
+            {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...
               </>

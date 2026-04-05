@@ -211,19 +211,23 @@ const HERO_ORBS: HeroOrb[] = [
 export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <main>
-      {/* Hero */}
+      {/* Hero — Sarang's photo displayed as img on the right for full top-to-bottom visibility */}
       <section
-        className="relative min-h-[90vh] flex items-center overflow-hidden"
-        style={{
-          backgroundImage:
-            "url('/assets/generated/sk-hero-bg.dim_1600x900.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className="relative min-h-[90vh] flex items-center overflow-hidden bg-background"
         data-ocid="home.section"
       >
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/80 to-background/50" />
+        {/* Full-height photo on the right — visible top to bottom */}
+        <img
+          src="/assets/my_image-019d5e1e-478e-70b9-bf25-41460c4d24da.jpeg"
+          alt="Sarang Kumar"
+          className="absolute inset-y-0 right-0 h-full w-1/2 object-contain object-right-top pointer-events-none select-none"
+          style={{ filter: "brightness(1.05) contrast(1.02)" }}
+        />
+
+        {/* Dark gradient — strong on left for text readability, fades to transparent on right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-background/10" />
+        {/* Subtle bottom fade only — very light so photo bottom stays visible */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
 
         {/* Animated gold orbs */}
         {HERO_ORBS.map((orb) => (
@@ -257,7 +261,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               for Modern Businesses
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">
-              From stunning websites to intelligent business tools \u2014 we
+              From stunning websites to intelligent business tools &mdash; we
               build digital experiences that convert visitors into loyal
               customers.
             </p>

@@ -166,13 +166,13 @@ export function PersonalPortfolio({
                 Web Designer and Developer
               </h1>
 
-              {/* Profile Photo */}
+              {/* Profile Photo — larger container, centered so face is fully visible */}
               <div className="flex justify-center mb-6">
-                <div className="w-28 h-28 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
+                <div className="w-32 h-32 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
                     src="/assets/download-019d540e-2e49-7185-96c2-52f3ec7bb89c.webp"
                     alt="Sarang Kumar"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>
@@ -308,12 +308,13 @@ export function PersonalPortfolio({
                   </a>
                 </div>
               </div>
+              {/* About photo — taller container so more of the portrait is visible */}
               <div className="flex justify-center">
-                <div className="w-48 h-48 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
+                <div className="w-56 h-64 rounded-sm overflow-hidden border-2 border-primary shadow-gold">
                   <img
                     src="/assets/download-019d540e-2e49-7185-96c2-52f3ec7bb89c.webp"
                     alt="Sarang Kumar"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
               </div>

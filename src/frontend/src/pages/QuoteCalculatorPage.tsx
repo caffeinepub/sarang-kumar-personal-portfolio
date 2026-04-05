@@ -1,5 +1,4 @@
 import type { backendInterface as FullBackend } from "@/backend.d";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useActor } from "@/hooks/useActor";
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
@@ -41,7 +40,7 @@ export function QuoteCalculatorPage() {
     email: "",
     phone: "",
   });
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   const typeObj = PROJECT_TYPES.find((t) => t.id === selectedType);
   const pagesObj = PAGE_COUNTS.find((p) => p.id === selectedPages);
@@ -68,12 +67,14 @@ export function QuoteCalculatorPage() {
       toast.error("Please enter a valid email address.");
       return;
     }
+
     if (!actor) {
       toast.error(
         "Still connecting to the server, please wait a moment and try again.",
       );
       return;
     }
+
     setSubmitting(true);
     try {
       const addonNames = selectedAddons
@@ -177,7 +178,7 @@ export function QuoteCalculatorPage() {
           </div>
         )}
 
-        {/* Step 1: Project Type */}
+        {/* Step 1 */}
         {step === 1 && (
           <div>
             <h2 className="font-display text-xl font-bold mb-5">
@@ -191,7 +192,7 @@ export function QuoteCalculatorPage() {
                   onClick={() => setSelectedType(type.id)}
                   className={`p-4 rounded-xl border text-left transition-all duration-200 ${
                     selectedType === type.id
-                      ? "border-primary bg-primary/10 shadow-gold-sm"
+                      ? "border-primary bg-primary/10"
                       : "border-border/60 bg-secondary hover:border-primary/40 hover:bg-primary/5"
                   }`}
                   data-ocid="quote.toggle"
@@ -207,7 +208,7 @@ export function QuoteCalculatorPage() {
           </div>
         )}
 
-        {/* Step 2: Page Count */}
+        {/* Step 2 */}
         {step === 2 && (
           <div>
             <h2 className="font-display text-xl font-bold mb-5">
@@ -221,7 +222,7 @@ export function QuoteCalculatorPage() {
                   onClick={() => setSelectedPages(pc.id)}
                   className={`p-4 rounded-xl border text-center transition-all duration-200 ${
                     selectedPages === pc.id
-                      ? "border-primary bg-primary/10 shadow-gold-sm"
+                      ? "border-primary bg-primary/10"
                       : "border-border/60 bg-secondary hover:border-primary/40 hover:bg-primary/5"
                   }`}
                   data-ocid="quote.toggle"
@@ -263,7 +264,7 @@ export function QuoteCalculatorPage() {
           </div>
         )}
 
-        {/* Step 3: Contact */}
+        {/* Step 3 */}
         {step === 3 && (
           <div>
             <h2 className="font-display text-xl font-bold mb-2">
@@ -272,7 +273,6 @@ export function QuoteCalculatorPage() {
             <p className="text-muted-foreground text-sm mb-5">
               Fill in your details to receive a detailed proposal.
             </p>
-
             <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-6">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">Project Type</span>
@@ -297,7 +297,6 @@ export function QuoteCalculatorPage() {
                 </span>
               </div>
             </div>
-
             <div className="space-y-3">
               <input
                 type="text"
@@ -333,7 +332,7 @@ export function QuoteCalculatorPage() {
           </div>
         )}
 
-        {/* Navigation Buttons */}
+        {/* Navigation */}
         <div className="flex justify-between mt-8">
           {step > 1 ? (
             <Button
@@ -347,7 +346,6 @@ export function QuoteCalculatorPage() {
           ) : (
             <div />
           )}
-
           {step < 3 ? (
             <Button
               className="btn-gold"
@@ -363,15 +361,10 @@ export function QuoteCalculatorPage() {
             <Button
               className="btn-gold"
               onClick={handleSubmit}
-              disabled={submitting || isFetching}
+              disabled={submitting}
               data-ocid="quote.submit_button"
             >
-              {isFetching ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                  Connecting...
-                </>
-              ) : submitting ? (
+              {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
                   Submitting...
